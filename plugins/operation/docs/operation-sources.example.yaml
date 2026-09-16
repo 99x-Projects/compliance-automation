@@ -1,0 +1,49 @@
+# version: 1
+# Copy this file into the consuming project as:
+#   .xianix/operation-sources.yaml
+# Secrets stay in the Xianix rule with-envs — never put tokens here.
+
+version: 1
+control: "8.1"
+
+sources:
+  - id: codebase
+    provider: git-repo
+    roles:
+      - process-control
+      - acceptance-criteria
+      - planned-changes
+      - unintended-changes
+    scope: "."
+
+  - id: qms-wiki
+    provider: confluence
+    roles:
+      - process-definitions
+      - process-criteria
+      - documented-information
+      - resources
+    site: https://acme.atlassian.net
+    space-key: QUALITY
+    cql: "space = QUALITY AND type = page AND (title ~ \"process\" OR title ~ \"SOP\" OR title ~ \"operational\")"
+    root-pages:
+      - "Quality Management System"
+
+  - id: delivery
+    provider: jira
+    roles:
+      - product-service-requirements
+      - acceptance-criteria
+      - process-control
+      - planned-changes
+    site: https://acme.atlassian.net
+    jql: "project = APP AND labels = qms ORDER BY updated DESC"
+
+  # Enable when this project uses ClickUp instead of (or as well as) Jira.
+  - id: ops-tasks
+    provider: clickup
+    enabled: false
+    roles:
+      - product-service-requirements
+      - process-control
+    list-id: "123456789"

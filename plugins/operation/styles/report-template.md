@@ -11,11 +11,24 @@ Fill every header field with concrete values — no `TBD`, no placeholders. Cite
 **Standard / control:** ISO 9001:2015, 8.1 Operational planning and control
 **Repository:** `<owner/repo>` or local path
 **Baseline:** `<branch>` @ `<short-sha>`
-**Scope:** [`--scope` value, or `full repository`]
+**Sources file:** [`--sources` / `.xianix/operation-sources.yaml` / `rule sources-config` / `implicit git-repo`]
+**Git scope:** [`--scope` value, or `full repository`]
 **Products / services in scope:** [named list]
 **Processes in scope:** [named list]
 **Report date:** `<YYYY-MM-DD>`
 **Overall 8.1 status:** `Conform` | `Partial` | `Gap`
+
+---
+
+### Sources used
+
+Every configured source must appear. `UNAVAILABLE` is not a silent skip.
+
+| Id | Provider | Roles | Verdict | Artifacts | Notes |
+|---|---|---|---|---|---|
+| codebase | git-repo | process-control, … | ok | 12 | |
+| qms-wiki | confluence | documented-information, … | UNAVAILABLE | 0 | ATLASSIAN-API-TOKEN missing |
+| delivery | jira | product-service-requirements, … | ok | 18 | |
 
 ---
 
@@ -49,9 +62,9 @@ Score each row from evidence in this run. Core obligations 1–7 drive overall s
 
 [How requirements were determined. Table of requirement sources.]
 
-| Product / service | Requirement source | Type (customer / statutory / internal) | Linked acceptance | Status |
+| Product / service | Requirement source (locator) | Type (customer / statutory / internal) | Linked acceptance | Status |
 |---|---|---|---|---|
-| | `path` | | | determined / implicit / missing |
+| | `jira://delivery/APP-12` or `path` | | | determined / implicit / missing |
 
 ---
 
@@ -83,9 +96,9 @@ Score each row from evidence in this run. Core obligations 1–7 drive overall s
 
 ### Process control map
 
-| Process | Criterion | Control that enforces it | Evidence | Verdict |
+| Process | Criterion | Control that enforces it | Evidence (locator) | Verdict |
 |---|---|---|---|---|
-| | | pipeline / review / SOP / checklist / none | `path` | Conform / Partial / Gap |
+| | | pipeline / review / SOP / workflow / none | wiki URL, issue, or `path` | Conform / Partial / Gap |
 
 ---
 
@@ -140,6 +153,6 @@ Ordered by 8.1 impact. Each action must close a named gap in the obligation tabl
 
 ---
 
-### Files assessed
+### Evidence assessed
 
-List directories and key files used as evidence. Note `--scope` misses (`note: scope path not found`) without failing the run.
+List source locators used (wiki pages, issues, git paths). Note `--scope` misses and `UNAVAILABLE` sources without failing the run.

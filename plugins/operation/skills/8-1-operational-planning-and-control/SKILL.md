@@ -2,17 +2,20 @@
 name: 8-1-operational-planning-and-control
 description: >-
   Assess and produce ISO 9001:2015 control 8.1 Operational planning and control
-  evidence for the current repository. Determines product and service
-  requirements, process and acceptance criteria, resources, process controls,
-  documented information, change control, and outsourced-process handoff.
-  Use when the user asks for ISO 9001 8.1, operational planning and control,
-  Clause 8 Operation, QMS process planning, or /operation 8.1.
-argument-hint: [--scope <path>]
+  evidence from configured project sources (git, Jira, ClickUp, Confluence/wiki,
+  or generic URLs). Determines product and service requirements, process and
+  acceptance criteria, resources, process controls, documented information,
+  change control, and outsourced-process handoff. Use when the user asks for
+  ISO 9001 8.1, operational planning and control, Clause 8 Operation, QMS
+  process planning, or /operation 8.1.
+argument-hint: [--sources <path>] [--scope <path>]
 ---
 
-Assess **ISO 9001:2015 8.1 Operational planning and control** for the current repository and write a planning-and-control report. This skill covers **8.1 only**. Do not assess 8.2–8.7 here; inventory outsourced work and point it at future 8.4.
+Assess **ISO 9001:2015 8.1 Operational planning and control** and write a planning-and-control report. This skill covers **8.1 only**. Do not assess 8.2–8.7 here; inventory outsourced work and point it at future 8.4.
 
-Parse `$ARGUMENTS` for `--scope <path>` (directory, glob, or comma-separated list). If omitted, scan the whole repository.
+Parse `$ARGUMENTS` for `--sources <path>` and `--scope <path>`. Also honor rule interpolations `sources-file` / `sources-config` when present.
+
+**Do not treat `git remote` as the only evidence system.** 8.1 usually needs several sources at once (wiki + task tracker + git). Read `providers/_source-contract.md` first, resolve the source list, then fetch.
 
 Do not copy ISO standard text into the report. Use the assessment checklist below in your own words.
 
@@ -41,6 +44,7 @@ Copy and complete:
 
 ```
 8.1 Progress:
+- [ ] 0. Resolve and fetch evidence sources
 - [ ] 1. Index the organization and process landscape
 - [ ] 2. Determine product and service requirements
 - [ ] 3. Establish process criteria
@@ -53,32 +57,42 @@ Copy and complete:
 - [ ] 10. Score each obligation and write the report
 ```
 
+### 0. Resolve and fetch evidence sources
+
+Follow the resolution order and fetch rules in `providers/_source-contract.md`.
+
+For each enabled source, read `providers/<provider>.md` and fetch. Merge artifacts **by role**. Cite locators as `provider://source-id/…` (issue URL, wiki URL, or repo path).
+
+Record a source table for the report header: id, provider, roles, verdict (`ok` / `UNAVAILABLE` / `empty`), artifact count.
+
+`--scope` applies only to `git-repo` (and to the implicit git fallback). It does not disable Jira, ClickUp, or Confluence sources.
+
 ### 1. Index the organization and process landscape
 
-Build a lightweight index. Prefer `--scope` paths when set.
+Build the landscape from **all fetched roles**, not only git.
 
-Look for:
+When a `git-repo` source (or fallback) is in play, also look in the clone:
 
-| Signal | Typical locations |
+| Signal | Typical git locations (if that role is on git-repo) |
 |---|---|
 | Products / services | `README*`, `docs/`, product specs, API docs, package manifests |
 | Process definitions | `docs/`, `processes/`, `qms/`, `quality/`, SOPs, runbooks |
-| Process control in engineering | CI/CD (`.github/workflows`, `azure-pipelines*`, `Jenkinsfile`), CODEOWNERS, branch protection docs, review templates |
-| Acceptance | tests (`**/*.{spec,test}.*`, `**/e2e/**`, `**/acceptance/**`), QA checklists, Definition of Done |
-| Resources | runbooks, on-call, capacity, environments, `docs/ops/` |
-| Change control | `CHANGELOG*`, RFC/ADR folders, release docs, workflow dispatch / environment gates |
-| Outsourcing | `vendor/`, `third-party`, `NOTICE`, `LICENSE*`, procurement, MSA/SOW mentions, SaaS integrations |
-| Clause 6 actions | risk registers, quality objectives, opportunity logs |
+| Process control in engineering | CI/CD (`.github/workflows`, `azure-pipelines*`, `Jenkinsfile`), CODEOWNERS, review templates |
+| Acceptance | tests, e2e, QA checklists, Definition of Done |
+| Resources | runbooks, on-call, capacity, `docs/ops/` |
+| Change control | `CHANGELOG*`, RFC/ADR, release docs |
+| Outsourcing | `vendor/`, `NOTICE`, `LICENSE*`, SaaS mentions |
+| Clause 6 actions | risk registers, quality objectives |
 
-Ignore noise: `node_modules/`, `dist/`, `build/`, `.git/`, vendored lockfile contents.
+Ignore `node_modules/`, `dist/`, `build/`, `.git/`.
 
-Record: products/services, in-scope processes, owners if named, and which files evidence each.
+Record: products/services, in-scope processes, owners if named, and which **source locators** evidence each.
 
 ### 2. Determine product and service requirements
 
 Extract **what** the organization delivers and the requirements those outputs must meet (functional, statutory/regulatory if present, customer, internal).
 
-Cite files. If requirements are implicit (README + tests only), mark **Partial** and list what is missing (named requirement set, version, acceptance linkage).
+Cite locators (wiki page, Jira/ClickUp issue, or file). If requirements are implicit (README + tests only), mark **Partial** and list what is missing (named requirement set, version, acceptance linkage).
 
 ### 3. Establish process criteria
 
@@ -104,7 +118,7 @@ Link each acceptance criterion to a product/service requirement from step 2 when
 
 ### 5. Determine resources for conformity
 
-List people, skills, infrastructure, tools, environments, and information needed so outputs can conform. Use evidence from docs and from what the processes actually depend on (CI runners, staging, licenses). Flag undetermined resources as **Gap**.
+List people, skills, infrastructure, tools, environments, and information needed so outputs can conform. Use wiki/SOP sources, git ops docs, and what the processes actually depend on (CI runners, staging, licenses). Flag undetermined resources as **Gap**.
 
 ### 6. Map process controls to criteria
 
@@ -159,11 +173,14 @@ Overall 8.1 status = worst of obligations 1–9, except N/A is ignored. If any c
 ## Invariants
 
 - 8.1 only — no 8.2–8.7 scoring.
-- Every finding cites a path (or `not found`).
+- Every finding cites a source locator (or `not found`).
 - Do not invent metrics, owners, or ISO certificates.
 - Do not paste copyrighted standard wording.
+- Do not put secrets in the report or in git.
+- Do not crawl undeclared systems (no extra Jira projects or wiki spaces).
 - Do not modify product source to "become compliant". Report and optional stubs under `compliance/iso-9001/8.1/` only if the user asked to create QMS files or that tree already exists.
-- If the repo has no QMS docs, still run the skill against engineering practice (pipelines, tests, README) and report gaps honestly.
+- Missing optional provider secrets → that source `UNAVAILABLE`, continue.
+- If no source file exists, use implicit `git-repo` and say so in the header.
 
 ## Output
 

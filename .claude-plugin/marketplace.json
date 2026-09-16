@@ -13,7 +13,7 @@
     {
       "name": "operation",
       "source": "./plugins/operation",
-      "description": "Automates ISO 9001:2015 Clause 8 Operation. Starts with 8.1 Operational planning and control; additional clause skills will be added per control.",
+      "description": "Automates ISO 9001:2015 Clause 8 Operation. Starts with 8.1 Operational planning and control using per-project sources (Jira, ClickUp, Confluence, git). Additional clause skills will be added per control.",
       "version": "0.1.0",
       "author": {
         "name": "99x",

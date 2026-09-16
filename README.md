@@ -2,11 +2,13 @@
 
 ISO 9001:2015 compliance automation plugins for Xianix. Each plugin maps to a clause family; each skill maps to one control so they can be added independently.
 
+Evidence systems (Jira, ClickUp, Confluence, git, …) are **declared per consuming project**, not hard-coded in the plugin. See [plugins/operation/docs/sources.md](plugins/operation/docs/sources.md).
+
 ## Plugins
 
 | Plugin | Clause | Status |
 |---|---|---|
-| [operation](plugins/operation) | 8 Operation | 8.1 skill available; 8.2–8.7 planned |
+| [operation](plugins/operation) | 8 Operation | 8.1 skill available; multi-source providers; 8.2–8.7 planned |
 
 ## Quick start
 

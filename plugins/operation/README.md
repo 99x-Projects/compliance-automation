@@ -1,9 +1,11 @@
 ---
 title: Operation
-description: ISO 9001:2015 Clause 8 automation — operational planning and control, with one skill per control.
+description: ISO 9001:2015 Clause 8 automation — operational planning and control, with one skill per control and per-project evidence sources.
 ---
 
 **Operation** automates ISO 9001:2015 **Clause 8 Operation**. Each control is a separate skill so they can be added independently.
+
+Evidence does **not** come from git alone. Each Xianix project declares its own sources (Jira, ClickUp, Confluence/wiki, git, generic URLs). The plugin supplies adapters; the project (or the rule) supplies which systems to use.
 
 Current coverage:
 
@@ -19,25 +21,46 @@ Current coverage:
 
 ---
 
-## How it works
+## How sources work
+
+```mermaid
+flowchart LR
+    A[Project YAML or Xianix rule] --> B[Source list]
+    B --> C[Providers: git / jira / clickup / confluence / generic]
+    C --> D[Merge by evidence role]
+    D --> E[8.1 skill scores obligations]
+```
+
+| Layer | Lives in | Example |
+|---|---|---|
+| **Roles** (what 8.1 needs) | this plugin | `documented-information`, `process-control` |
+| **Providers** (how to fetch) | `providers/` | Confluence CQL, Jira JQL |
+| **Sources** (which systems *this* project uses) | `.xianix/operation-sources.yaml` or rule `sources-config` | space `QUALITY`, JQL `project = APP` |
+| **Secrets** | rule `with-envs` | `ATLASSIAN-API-TOKEN` |
+
+Details: [docs/sources.md](docs/sources.md) · contract: [providers/_source-contract.md](providers/_source-contract.md) · rule examples: [docs/rules-examples.md](docs/rules-examples.md).
+
+Copy [docs/operation-sources.example.yaml](docs/operation-sources.example.yaml) into the consuming repo as `.xianix/operation-sources.yaml`.
+
+---
+
+## How 8.1 works
 
 ```mermaid
 flowchart TD
-    A["/operation 8.1"] --> B[Index product/service and process artifacts]
-    B --> C[Assess 8.1 planning and control obligations]
-    C --> D[Build process criteria and acceptance criteria]
-    D --> E[Map resources, process controls, and documented information]
-    E --> F[Review planned and unintended change handling]
-    F --> G[Inventory outsourced processes for 8.4]
-    G --> H[Write operational planning and control report]
+    A["/operation 8.1 --sources …"] --> B[Resolve source list]
+    B --> C[Fetch each enabled provider]
+    C --> D[Index processes and products]
+    D --> E[Score 8.1 obligations]
+    E --> F[Write operational planning and control report]
 ```
 
-1. **Discover** — index the repository for products/services, process definitions, QMS records, pipelines, tests, change history, and supplier/outsourcing signals.
-2. **Assess 8.1** — score each planning and control obligation as Conform / Partial / Gap / Not applicable, with file evidence.
-3. **Produce planning outputs** — process criteria, acceptance criteria, resource needs, control map, and documented-information inventory.
-4. **Write the report** — `iso-9001-8.1-operational-planning-and-control.md` using `styles/report-template.md`.
+1. **Resolve sources** — project YAML, rule input, or implicit `git-repo`.
+2. **Fetch** — only declared systems; missing optional tokens mark that source unavailable.
+3. **Assess 8.1** — Conform / Partial / Gap / N/A with locators (wiki, issue, path).
+4. **Write the report** — `iso-9001-8.1-operational-planning-and-control.md`.
 
-This is an **assessment and planning** run. It does not rewrite product code. It writes the report (and, when gaps are clear, recommended documented-information stubs under `compliance/iso-9001/8.1/` if that directory already exists or the user asked for artifacts).
+This is an **assessment and planning** run. It does not rewrite product code.
 
 ---
 
@@ -45,39 +68,25 @@ This is an **assessment and planning** run. It does not rewrite product code. It
 
 | Input | Required | Description |
 |---|---|---|
-| Control | No | Defaults to `8.1`. Later skills will accept `8.2`–`8.7`. |
-| `--scope <path>` | No | Limit discovery to a directory or glob (for example `docs/qms`, `processes`). |
+| Control | No | Defaults to `8.1`. |
+| `--sources <path>` | No | Source YAML. Default search: `.xianix/operation-sources.yaml`. |
+| `--scope <path>` | No | Limits **git-repo** only. Does not ignore Jira/Confluence/ClickUp. |
 
 ---
 
 ## Sample prompts
 
 ```text
-/operation
 /operation 8.1
-/operation 8.1 --scope docs/qms
+/operation 8.1 --sources .xianix/operation-sources.yaml
+/operation 8.1 --sources .xianix/operation-sources.yaml --scope src
 ```
-
-Or ask the agent to run operational planning and control / ISO 9001 8.1 against the current repository.
 
 ---
 
 ## Output
 
-Every 8.1 run writes **one report** at the repository root:
-
-`iso-9001-8.1-operational-planning-and-control.md`
-
-The report includes:
-
-- Product/service requirement determination
-- Process criteria and acceptance criteria
-- Resources needed for conformity
-- Process control against those criteria
-- Documented information to show processes ran as planned and outputs conform
-- Suitability of planning outputs for operations
-- Planned-change control and review of unintended changes
-- Outsourced-process inventory (handoff to 8.4; that control is not assessed here)
+`iso-9001-8.1-operational-planning-and-control.md` at the repository root, including a **Sources used** table and the 8.1 obligation scores.
 
 ---
 
@@ -85,18 +94,25 @@ The report includes:
 
 ```
 operation/
-├── .claude-plugin/
-│   └── plugin.json
-├── commands/
-│   └── operation.md
-├── skills/
-│   └── 8-1-operational-planning-and-control/SKILL.md
-├── styles/
-│   └── report-template.md
+├── .claude-plugin/plugin.json
+├── commands/operation.md
+├── skills/8-1-operational-planning-and-control/SKILL.md
+├── providers/
+│   ├── _source-contract.md
+│   ├── git-repo.md
+│   ├── jira.md
+│   ├── clickup.md
+│   ├── confluence.md
+│   └── generic.md
+├── styles/report-template.md
+├── docs/
+│   ├── sources.md
+│   ├── rules-examples.md
+│   └── operation-sources.example.yaml
 └── README.md
 ```
 
-Add a new control by creating `skills/<clause>-<slug>/SKILL.md` and routing it from `commands/operation.md`. Do not fold later controls into the 8.1 skill.
+Add a control: new `skills/<clause>-<slug>/SKILL.md` (reuse the same sources). Add a vendor: new `providers/<name>.md` (no skill change).
 
 ---
 

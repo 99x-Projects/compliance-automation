@@ -1,7 +1,7 @@
 {
   "name": "operation",
   "version": "0.1.0",
-  "description": "Automates ISO 9001:2015 Clause 8 Operation. Assesses operational planning and control (8.1), produces planning outputs and documented-information evidence, and is structured so each later control (8.2–8.7) can be added as its own skill.",
+  "description": "Automates ISO 9001:2015 Clause 8 Operation. Assesses operational planning and control (8.1) from per-project evidence sources (git, Jira, ClickUp, Confluence, generic). Additional clause skills (8.2–8.7) can be added independently.",
   "author": {
     "name": "99x",
     "email": "xianix@99x.io",
@@ -22,5 +22,6 @@
   ],
   "commands": ["./commands/operation.md"],
   "skills": "./skills/",
-  "outputStyles": "./styles/"
+  "outputStyles": "./styles/",
+  "providers": "./providers/"
 }
