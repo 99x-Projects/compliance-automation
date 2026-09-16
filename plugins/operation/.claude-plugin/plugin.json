@@ -1,0 +1,26 @@
+{
+  "name": "operation",
+  "version": "0.1.0",
+  "description": "Automates ISO 9001:2015 Clause 8 Operation. Assesses operational planning and control (8.1), produces planning outputs and documented-information evidence, and is structured so each later control (8.2–8.7) can be added as its own skill.",
+  "author": {
+    "name": "99x",
+    "email": "xianix@99x.io",
+    "url": "https://github.com/99x"
+  },
+  "homepage": "https://github.com/99x-Projects/compliance-automation",
+  "repository": "https://github.com/99x-Projects/compliance-automation",
+  "license": "MIT",
+  "keywords": [
+    "iso-9001",
+    "iso-9001-2015",
+    "qms",
+    "operations",
+    "8.1",
+    "operational-planning",
+    "process-control",
+    "compliance"
+  ],
+  "commands": ["./commands/operation.md"],
+  "skills": "./skills/",
+  "outputStyles": "./styles/"
+}
