@@ -1,0 +1,60 @@
+# Contract and publisher checks: F1 (schemas, samples, golden events), F2 (released schemas are immutable),
+# F3/F4 (publisher: one event per control, no secrets), and the bundled publisher is up to date.
+name: Contracts and publisher
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "tools/**"
+      - "plugins/operation/scripts/**"
+      - "plugins/operation/.claude-plugin/plugin.json"
+      - ".github/workflows/contracts.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/**"
+      - "tools/**"
+      - "plugins/operation/scripts/**"
+      - "plugins/operation/.claude-plugin/plugin.json"
+      - ".github/workflows/contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+
+      - run: npm ci
+
+      - name: F2 — released schemas unchanged (vs. base branch lock on PRs)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && \
+             git show "origin/${{ github.base_ref }}:contracts/schemas/SCHEMAS.lock.json" > "$RUNNER_TEMP/base-lock.json" 2>/dev/null; then
+            npm run schemas:check -- --base "$RUNNER_TEMP/base-lock.json"
+          else
+            npm run schemas:check
+          fi
+
+      - name: F1 — schemas, catalogues, samples and golden events
+        run: npm run validate
+
+      - name: Publisher bundle is built from the current sources
+        run: npm run check:publisher
+
+      - name: Unit tests
+        run: npm test

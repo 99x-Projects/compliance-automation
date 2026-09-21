@@ -1,0 +1,23 @@
+{
+  "name": "compliance-contract-tools",
+  "private": true,
+  "type": "module",
+  "description": "Contract schemas checks and reference flattener for compliance-automation (fitness functions F1, F2).",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "validate": "node validate-contracts.mjs",
+    "schemas:check": "node check-schema-lock.mjs",
+    "schemas:lock": "node check-schema-lock.mjs --lock",
+    "test": "node --test \"test/*.test.mjs\"",
+    "ci": "npm run schemas:check && npm run validate && npm run check:publisher && npm test",
+    "build:publisher": "node build-publisher.mjs",
+    "check:publisher": "node build-publisher.mjs --check"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "esbuild": "0.28.2"
+  }
+}

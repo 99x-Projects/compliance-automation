@@ -1,0 +1,20 @@
+{
+  "files": {
+    "compliance-common.v1.schema.json": {
+      "sha256": "2e31d3042b685c0ffd8bb331bb5b7ce52c33e56a008aa009d41e689bb59fbe5b",
+      "lockedAt": "2026-09-21T13:03:51.321Z"
+    },
+    "compliance-event.v1.schema.json": {
+      "sha256": "52ed6d3611a416ace69025013357abda241cd940bb2b7cf0d6d5989e8a8d38f8",
+      "lockedAt": "2026-09-21T13:03:51.321Z"
+    },
+    "compliance-report.v1.schema.json": {
+      "sha256": "5408e090ee822a80f0ed94502b3ab9f6e21fd75e7a6bd37581c8c289463089be",
+      "lockedAt": "2026-09-21T13:03:51.321Z"
+    },
+    "control-catalog.v1.schema.json": {
+      "sha256": "d63adaa7f3c9bdb06a4cf65ff6a51b3bf1cb6a128b48f4ab2ff024530914da0a",
+      "lockedAt": "2026-09-21T13:03:51.321Z"
+    }
+  }
+}

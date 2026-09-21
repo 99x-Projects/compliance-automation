@@ -55,6 +55,7 @@ Copy and complete:
 - [ ] 8. Assess planned and unintended change handling
 - [ ] 9. Inventory outsourced processes (8.4 handoff)
 - [ ] 10. Score each obligation and write the report
+- [ ] 11. Write compliance-report.json and run the publisher
 ```
 
 ### 0. Resolve and fetch evidence sources
@@ -170,6 +171,12 @@ Scoring:
 
 Overall 8.1 status = worst of obligations 1–9, except N/A is ignored. If any core obligation (1–7) is Gap, overall is Gap.
 
+### 11. Write the structured report and run the publisher
+
+Read `styles/report-json.md` and write `compliance-report.json` next to the Markdown report: the same verdicts, evidence and actions, as JSON. Obligations 1–7 are `core: true`. Leave `executionId` and `pluginVersion` as `"pending"`.
+
+Then run the publisher as described in the `/operation` command (**Publishing to AI Hub**). It validates the JSON against the contract every time, and sends it to AI Hub only when publishing is enabled. On exit code `2`, fix `compliance-report.json` from the printed errors and run it once more.
+
 ## Invariants
 
 - 8.1 only — no 8.2–8.7 scoring.
@@ -181,11 +188,12 @@ Overall 8.1 status = worst of obligations 1–9, except N/A is ignored. If any c
 - Do not modify product source to "become compliant". Report and optional stubs under `compliance/iso-9001/8.1/` only if the user asked to create QMS files or that tree already exists.
 - Missing optional provider secrets → that source `UNAVAILABLE`, continue.
 - If no source file exists, use implicit `git-repo` and say so in the header.
+- `compliance-report.json` must match the Markdown report exactly; never invent `executionId`, `pluginVersion`, commit or repository values.
 
 ## Output
 
-Write the report, then one confirmation line:
+Write the report and `compliance-report.json`, run the publisher, then one confirmation line:
 
 ```
-8.1 operational planning and control report: <path> — overall <Conform|Partial|Gap>
+8.1 operational planning and control report: <path> — overall <Conform|Partial|Gap> — AI Hub: <delivered | preserved in <issue comment URL> | not sent (publishing off) | failed: <reason>>
 ```
