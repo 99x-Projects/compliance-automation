@@ -1,0 +1,381 @@
+[
+  {
+    "correlationId": "local-2026-09-21-the-agent",
+    "eventId": "iso-9001-2015:8.1:xianix-team/the-agent:local-2026-09-21-the-agent",
+    "actors": [
+      "ISO Audit Agent"
+    ],
+    "dimensions": {
+      "schema": "compliance.v1",
+      "standard": "ISO 9001:2015",
+      "standardKey": "iso-9001-2015",
+      "control": "8.1",
+      "controlTitle": "Operational planning and control",
+      "controlGroup": "8",
+      "repository": "xianix-team/The-Agent",
+      "commit": "1d45f72",
+      "baselineRef": "main",
+      "runAt": "2026-09-21T13:00:00Z",
+      "executionId": "local-2026-09-21-the-agent",
+      "pluginVersion": "operation@0.1.0 (local run)",
+      "overall": "Partial",
+      "conform": 0,
+      "partial": 10,
+      "gap": 1,
+      "na": 0,
+      "p0Actions": 3,
+      "sourcesOk": 1,
+      "sourcesTotal": 1,
+      "sourcesMode": "implicit-git-repo",
+      "notAssessedCount": 4
+    },
+    "summary": "The Xianix Agent delivers a multi-tenant control plane that turns platform webhooks into isolated Claude Code executions, plus an executor image and an AI-DLC lifecycle service built on label-driven agents. Planning is documented in depth: architecture objectives, a tenant-isolation design, a rules specification, a webhook guide, an AI-DLC process with explicit human review gates, and Azure infrastructure and deployment runbooks. Controls are strong for the executor: shellcheck and a hermetic integration-test tier gate every tagged publish. They're weak for the agent image, which publishes on tag without running its 150 unit tests. Most commits reach `main` without a pull request, releases have no notes, and deployment always pulls `:latest`. Some maintained documents no longer match the code. There's no incident or rollback procedure. No core obligation is a Gap, so the overall 8.1 status is Partial.",
+    "obligations": [
+      {
+        "n": 1,
+        "title": "Product and service requirements determined",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/architecture.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/tenant-isolation-design.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/rules-json.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/ai-dlc-ping-pong.md"
+          }
+        ],
+        "gap": "Objectives and design goals, not a versioned requirement set; no customer or statutory data-handling requirements."
+      },
+      {
+        "n": 2,
+        "title": "Criteria for processes established",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/ai-dlc-ping-pong.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": ".github/workflows/publish-executor.yml"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/azure-deployment.md"
+          }
+        ],
+        "gap": "Service process defined; internal development, review and release criteria not written down."
+      },
+      {
+        "n": 3,
+        "title": "Criteria for acceptance of products and services established",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Executor/tests/integration_test.sh"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "tests/e2e/README.md"
+          }
+        ],
+        "gap": "No acceptance criteria for agent releases; e2e suite manual only; no named acceptor."
+      },
+      {
+        "n": 4,
+        "title": "Resources needed for conformity determined",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/azure-infrastructure.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "TheAgent/EnvConfig.cs"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Executor/Dockerfile"
+          }
+        ],
+        "gap": "People, roles and skills not determined."
+      },
+      {
+        "n": 5,
+        "title": "Processes controlled in accordance with the criteria",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": ".github/workflows/publish-executor.yml"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "command",
+            "sourceId": "codebase",
+            "locator": "git log --merges --since=2026-08-01 (4 of 36 commits)"
+          }
+        ],
+        "gap": "Agent image publishes without running its tests; most changes land on main without a PR."
+      },
+      {
+        "n": 6,
+        "title": "Documented information for confidence that processes ran as planned",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "commit",
+            "sourceId": "codebase",
+            "locator": "tags v1.6.0 … vv1.10.0"
+          },
+          {
+            "provider": "github",
+            "kind": "external",
+            "sourceId": "github",
+            "locator": "GitHub Actions runs"
+          }
+        ],
+        "gap": "Inconsistent tag naming; no retention stated; no VM deployment record."
+      },
+      {
+        "n": 7,
+        "title": "Documented information demonstrating product/service conformity",
+        "core": true,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": ".github/workflows/publish-executor.yml"
+          }
+        ],
+        "gap": "No retained test reports or release notes; nothing for the agent image."
+      },
+      {
+        "n": 8,
+        "title": "Planning outputs suitable for operations",
+        "core": false,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/azure-deployment.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/rules-json.md:598"
+          }
+        ],
+        "gap": "Documents have drifted from the code; no owners named."
+      },
+      {
+        "n": 9,
+        "title": "Planned changes controlled",
+        "core": false,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/tenant-isolation-design.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/ai-dlc-ping-pong.md"
+          }
+        ],
+        "gap": "No decision-record process or change log; direct commits to main."
+      },
+      {
+        "n": 10,
+        "title": "Unintended changes reviewed; adverse effects mitigated",
+        "core": false,
+        "verdict": "Gap",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Scripts/deploy.sh"
+          }
+        ],
+        "gap": "No incident, hotfix or rollback procedure; deploy always uses :latest."
+      },
+      {
+        "n": 11,
+        "title": "Outsourced processes identified (8.4 handoff only)",
+        "core": false,
+        "verdict": "Partial",
+        "evidence": [
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "README.md"
+          },
+          {
+            "provider": "git-repo",
+            "kind": "path",
+            "sourceId": "codebase",
+            "locator": "Docs/azure-infrastructure.md"
+          }
+        ],
+        "gap": "Providers mentioned but not listed with controls; third-party plugins are the main residual risk."
+      }
+    ],
+    "actions": [
+      {
+        "priority": "P0",
+        "text": "Run dotnet test as a gate in publish-theagent.yml and on pull requests; retain test reports.",
+        "closes": [
+          5,
+          7
+        ],
+        "artifact": ".github/workflows/publish-theagent.yml"
+      },
+      {
+        "priority": "P0",
+        "text": "Document the incident, hotfix and rollback procedure, including deploying a specific image tag.",
+        "closes": [
+          10
+        ],
+        "artifact": "Docs/incident-and-rollback.md"
+      },
+      {
+        "priority": "P0",
+        "text": "Require pull requests with review on main; add CODEOWNERS and a PR template.",
+        "closes": [
+          2,
+          5
+        ],
+        "artifact": ".github/CODEOWNERS"
+      },
+      {
+        "priority": "P1",
+        "text": "Publish release notes per tag and fix tag naming.",
+        "closes": [
+          6,
+          7,
+          9
+        ],
+        "artifact": "CHANGELOG.md"
+      },
+      {
+        "priority": "P1",
+        "text": "Bring Docs/rules-json.md back in line with the code; add status lines to design docs.",
+        "closes": [
+          8,
+          9
+        ],
+        "artifact": "Docs/rules-json.md"
+      },
+      {
+        "priority": "P1",
+        "text": "Write a Definition of Done and release checklist, including the e2e suite.",
+        "closes": [
+          3,
+          7
+        ],
+        "artifact": "Docs/definition-of-done.md"
+      },
+      {
+        "priority": "P2",
+        "text": "Record requirements for customer data handling.",
+        "closes": [
+          1
+        ],
+        "artifact": "Docs/requirements.md"
+      },
+      {
+        "priority": "P2",
+        "text": "Name maintainers and release owners; record VM deployments.",
+        "closes": [
+          4,
+          6
+        ],
+        "artifact": "Docs/operations.md"
+      },
+      {
+        "priority": "P2",
+        "text": "Declare the documentation site and issue tracker as sources.",
+        "closes": [
+          1,
+          8
+        ],
+        "artifact": ".xianix/operation-sources.yaml"
+      }
+    ],
+    "sources": [
+      {
+        "id": "codebase",
+        "provider": "git-repo",
+        "roles": [
+          "all"
+        ],
+        "verdict": "ok",
+        "artifacts": 27,
+        "note": "implicit fallback; docs site and issue tracker not declared"
+      }
+    ],
+    "sections": [],
+    "notAssessed": [
+      "Published documentation site",
+      "Issue tracker",
+      "GitHub repository settings (branch protection, environment reviewers)",
+      "Azure VM runtime configuration"
+    ],
+    "reportMd": "## ISO 9001:2015 — 8.1 Operational planning and control\n\n**Standard / control:** ISO 9001:2015, 8.1 Operational planning and control\n**Repository:** `xianix-team/the-agent` (local clone)\n**Baseline:** `main` @ `1d45f72` (clean working tree)\n**Sources file:** `implicit git-repo` (no `.xianix/operatio\n…(trimmed for test fixture)"
+  }
+]
