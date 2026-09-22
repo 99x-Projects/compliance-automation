@@ -39,15 +39,8 @@
         "core": true,
         "verdict": "Partial",
         "originalVerdict": "Partially implemented",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": ".github/workflows/deploy.yml"
-          }
-        ],
-        "gap": "Rules exist for CI only; no written access policy."
+        "gap": "Rules exist for CI only; no written access policy.",
+        "evidenceCount": 1
       },
       {
         "n": 2,
@@ -55,8 +48,8 @@
         "core": true,
         "verdict": "Gap",
         "originalVerdict": "Not implemented",
-        "evidence": [],
-        "gap": "No review records found in declared sources."
+        "gap": "No review records found in declared sources.",
+        "evidenceCount": 0
       },
       {
         "n": 3,
@@ -64,15 +57,8 @@
         "core": true,
         "verdict": "Conform",
         "originalVerdict": "Implemented",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "CODEOWNERS"
-          }
-        ],
-        "gap": ""
+        "gap": "",
+        "evidenceCount": 1
       }
     ],
     "actions": [
@@ -113,34 +99,19 @@
         "note": "ATLASSIAN-API-TOKEN missing"
       }
     ],
-    "sections": [
-      {
-        "id": "reviewed-systems",
-        "title": "Systems reviewed",
-        "kind": "table",
-        "columns": [
-          "System",
-          "Owner",
-          "Access model"
-        ],
-        "rows": [
-          [
-            "CI/CD",
-            "not named",
-            "Role-based"
-          ],
-          [
-            "Production database",
-            "not named",
-            "not found"
-          ]
-        ]
-      }
-    ],
     "notAssessed": [
       "Identity provider configuration"
     ],
-    "reportMd": "## ISO/IEC 27001:2022 — A.5.15 Access control\n\nSynthetic sample report used by contract tests.\n"
+    "detail": {
+      "status": "stored",
+      "provider": "github",
+      "repository": "example-org/sample-service",
+      "branch": "compliance-audits",
+      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
+      "path": "audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.5.15.md",
+      "url": "https://github.com/example-org/sample-service/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.5.15.md",
+      "sha256": "2ce527f4d22aedef9d67532d3fc7057c5822b3c74ec7237d3970bd1d715f16c2"
+    }
   },
   {
     "correlationId": "exec-sample-27001",
@@ -180,8 +151,8 @@
         "core": true,
         "verdict": "N/A",
         "originalVerdict": "Not applicable",
-        "evidence": [],
-        "gap": ""
+        "gap": "",
+        "evidenceCount": 0
       }
     ],
     "actions": [],
@@ -206,10 +177,18 @@
         "note": "ATLASSIAN-API-TOKEN missing"
       }
     ],
-    "sections": [],
     "notAssessed": [
       "Identity provider configuration"
     ],
-    "reportMd": "## ISO/IEC 27001:2022 — A.8.13 Information backup\n\nNot applicable: the service is stateless.\n"
+    "detail": {
+      "status": "stored",
+      "provider": "github",
+      "repository": "example-org/sample-service",
+      "branch": "compliance-audits",
+      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
+      "path": "audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.8.13.md",
+      "url": "https://github.com/example-org/sample-service/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.8.13.md",
+      "sha256": "a5a8f64c4d88ef3235e8cf58c68c600dd50be5a599b0aada31ea8fae36dba797"
+    }
   }
 ]

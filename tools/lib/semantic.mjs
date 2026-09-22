@@ -1,5 +1,5 @@
 // Rules JSON Schema cannot express. Each function returns a list of error strings (empty = valid).
-import { eventIdFor, tally } from './flatten.mjs';
+import { eventIdFor, tally, MAX_EVENT_BYTES } from './flatten.mjs';
 
 function catalogIndex(catalogs) {
   const byStandard = new Map();
@@ -42,7 +42,7 @@ function checkObligationsAndActions(obligations, actions, sources, where) {
     if (numbers.has(o.n)) errors.push(`${where}: duplicate obligation number ${o.n}`);
     numbers.add(o.n);
     const sourceIds = new Set(sources.map((s) => s.id));
-    for (const e of o.evidence) {
+    for (const e of o.evidence ?? []) {
       if (e.kind !== 'external' && !sourceIds.has(e.sourceId)) {
         errors.push(`${where}: obligation ${o.n} cites source '${e.sourceId}', which is not in sources`);
       }
@@ -76,6 +76,19 @@ export function checkReport(report, catalogs) {
   return errors;
 }
 
+// F18: a stored detail is linked by an immutable commit permalink to its own control's file.
+function checkDetail(detail, d, where) {
+  if (detail?.status !== 'stored') return [];
+  const errors = [];
+  if (!detail.url.endsWith(`/${detail.repository}/blob/${detail.commit}/${detail.path}`)) {
+    errors.push(`${where}: detail.url must be the commit permalink …/${detail.repository}/blob/${detail.commit}/${detail.path}`);
+  }
+  if (!detail.path.startsWith(`audits/${d.standardKey}/`) || !detail.path.endsWith('.md')) {
+    errors.push(`${where}: detail.path must be a Markdown file under audits/${d.standardKey}/`);
+  }
+  return errors;
+}
+
 export function checkEvents(events, catalogs) {
   const index = catalogIndex(catalogs);
   const errors = [];
@@ -105,6 +118,10 @@ export function checkEvents(events, catalogs) {
 
     errors.push(...checkControlAgainstCatalog(index, d.standardKey, d.control, d.controlTitle, d.controlGroup, where));
     errors.push(...checkObligationsAndActions(ev.obligations, ev.actions, ev.sources, where));
+
+    const bytes = new TextEncoder().encode(JSON.stringify(ev)).length;
+    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the repository report`);
+    errors.push(...checkDetail(ev.detail, d, where));
 
     if (d.tokens !== undefined || d.costUsd !== undefined) {
       usageCarriers.set(ev.correlationId, (usageCarriers.get(ev.correlationId) ?? 0) + 1);

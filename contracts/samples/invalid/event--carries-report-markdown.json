@@ -229,6 +229,7 @@
       "path": "audits/iso-9001-2015/20260921T130000Z--local-2026-09-21-the-agent/8.1.md",
       "url": "https://github.com/xianix-team/the-agent/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-9001-2015/20260921T130000Z--local-2026-09-21-the-agent/8.1.md",
       "sha256": "4799fbe04278dfe8420a3fbbe07a11a29d7c5238a67de2ad5b90e1d875ce5360"
-    }
+    },
+    "reportMd": "# 8.1 full report\n..."
   }
 ]

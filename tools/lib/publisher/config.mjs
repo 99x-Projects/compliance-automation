@@ -1,5 +1,6 @@
 // Publisher configuration from the environment. Xianix passes env names in dashed form
 // (AIHUB-API-KEY); local shells use underscores. Both are accepted.
+import { DEFAULT_DETAIL_BRANCH } from '../detail-files.mjs';
 
 export function envValue(env, name) {
   const dashed = name.replace(/_/g, '-');
@@ -19,6 +20,12 @@ export function readConfig(env) {
     executionId: envValue(env, 'EXECUTION_ID'),
     fallbackIssue: envValue(env, 'AIHUB_FALLBACK_ISSUE'),
     githubToken: envValue(env, 'GITHUB_TOKEN'),
+    githubApiUrl: (envValue(env, 'GITHUB_API_URL') ?? 'https://api.github.com').replace(/\/+$/, ''),
+    githubServerUrl: (envValue(env, 'GITHUB_SERVER_URL') ?? 'https://github.com').replace(/\/+$/, ''),
+    // Where the detailed report goes. Default: the audited repository, branch compliance-audits.
+    detailStore: envValue(env, 'COMPLIANCE_DETAIL_STORE')?.toLowerCase() ?? 'github',
+    detailRepo: envValue(env, 'COMPLIANCE_DETAIL_REPO')?.toLowerCase(),
+    detailBranch: envValue(env, 'COMPLIANCE_DETAIL_BRANCH') ?? DEFAULT_DETAIL_BRANCH,
   };
 }
 
@@ -39,7 +46,20 @@ export function configErrors(config) {
   if (config.fallbackIssue && !/^[\w.-]+\/[\w.-]+#\d+$/.test(config.fallbackIssue)) {
     errors.push('AIHUB_FALLBACK_ISSUE must look like owner/repo#123');
   }
+  if (!['github', 'off'].includes(config.detailStore)) errors.push('COMPLIANCE_DETAIL_STORE must be github or off');
+  if (config.detailRepo && !/^[a-z0-9._-]+\/[a-z0-9._-]+$/.test(config.detailRepo)) {
+    errors.push('COMPLIANCE_DETAIL_REPO must look like owner/repo');
+  }
+  if (!/^[A-Za-z0-9._/-]+$/.test(config.detailBranch) || config.detailBranch.includes('..')) {
+    errors.push('COMPLIANCE_DETAIL_BRANCH is not a valid branch name');
+  }
   return errors;
+}
+
+// Not errors: the summary still reaches AI Hub, only the link to the detailed report is missing.
+export function detailWarnings(config) {
+  if (!config.publish || config.detailStore === 'off') return [];
+  return config.githubToken ? [] : ['GITHUB_TOKEN is not set: the detailed report cannot be committed and AI Hub will show the summary only'];
 }
 
 export function ingestUrl(config) {

@@ -182,7 +182,7 @@ Put Atlassian / ClickUp tokens on the **rule-set-level** `with-envs` so every sc
 
 ## Publish results to AI Hub (pilot)
 
-Adds AI Hub delivery to the GitHub example above. The publisher runs inside the executor and POSTs one event per control assessed to the team's `compliance-audit` activity. Get the node and activity ids from AI Hub (**Compliance → Enable compliance**, or the activity's **Webhooks** tab, API-key option).
+Adds AI Hub delivery to the GitHub example above. The publisher runs inside the executor. It first commits the detailed report to a `compliance-audits` branch of the audited repository, then POSTs one summary event per control assessed to the team's `compliance-audit` activity, linking to that commit. Get the node and activity ids from AI Hub (**Compliance → Enable compliance**, or the activity's **Webhooks** tab, API-key option).
 
 Add to `with-envs`:
 
@@ -193,6 +193,16 @@ Add to `with-envs`:
 { "name": "AIHUB-ACTIVITY-ID", "value": "na_XXXXXXXXXX", "constant": true },
 { "name": "AIHUB-API-KEY", "value": "secrets.AIHUB-API-KEY", "mandatory": true }
 ```
+
+The detailed report uses the `GITHUB-TOKEN` the rule already has; it needs **Contents: write** on the audited repository. Optional:
+
+```json
+{ "name": "COMPLIANCE-DETAIL-REPO", "value": "org/audit-records", "constant": true },
+{ "name": "COMPLIANCE-DETAIL-BRANCH", "value": "compliance-audits", "constant": true },
+{ "name": "COMPLIANCE-DETAIL-STORE", "value": "off", "constant": true }
+```
+
+`COMPLIANCE-DETAIL-REPO` sends every team's reports to one records repository; `COMPLIANCE-DETAIL-STORE=off` sends the summary only. The branch shares no history with the code: it doesn't trigger CI, isn't under branch protection, and isn't read back as evidence by the next audit. Each run adds one commit under `audits/<standard>/<run time>--<execution id>/`; nothing is ever force-pushed. If the commit fails, the report goes to the fallback issue instead and AI Hub links there.
 
 Optionally block web search for the audit run (providers use `curl`, the `generic` provider may use web fetch):
 
@@ -212,7 +222,7 @@ When publishing, set AIHUB_FALLBACK_ISSUE={{repository-name}}#{{issue-number}} f
 In this setup the API key is in the executor's environment, so the audit agent could read it. Use a **dedicated team key** for the pilot, pilot with internal teams only, and revoke the key when delivery moves to Xianix `raise-events` (the key then stays in the Xianix vault). Never use the `whs_…` secret-in-URL option: full URLs are logged.
 :::
 
-The publisher always validates `compliance-report.json`. With `AIHUB-PUBLISH` unset it only writes `aihub-event.json` — useful for local runs.
+The publisher always validates `compliance-report.json`. With `AIHUB-PUBLISH` unset it only writes `aihub-event.json` and commits nothing — useful for local runs.
 
 ---
 
@@ -220,7 +230,7 @@ The publisher always validates `compliance-report.json`. With `AIHUB-PUBLISH` un
 
 | Env name in `with-envs` | Used by | Typical vault key |
 |---|---|---|
-| `GITHUB-TOKEN` / `AZURE-DEVOPS-TOKEN` | git clone / optional posting | git host PAT |
+| `GITHUB-TOKEN` / `AZURE-DEVOPS-TOKEN` | git clone / optional posting; publisher commits the detailed report (GitHub, Contents: write) | git host PAT |
 | `ATLASSIAN-EMAIL` | `jira`, `confluence` | Atlassian account email |
 | `ATLASSIAN-API-TOKEN` | `jira`, `confluence` | Atlassian API token |
 | `CLICKUP-TOKEN` | `clickup` | ClickUp API token |

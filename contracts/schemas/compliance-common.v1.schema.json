@@ -71,6 +71,47 @@
         }
       }
     },
+    "obligationSummary": {
+      "description": "An obligation as AI Hub stores it. Evidence stays in the detailed report in the repository; only its count travels.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "title", "core", "verdict", "gap", "evidenceCount"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1, "maximum": 999 },
+        "title": { "$ref": "#/$defs/text" },
+        "core": { "type": "boolean" },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "originalVerdict": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "gap": {
+          "description": "What is missing, cut to 300 characters. The full text is in the detailed report.",
+          "type": "string",
+          "maxLength": 300
+        },
+        "evidenceCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "detail": {
+      "description": "Where the detailed report for this control is kept; AI Hub stores the summary and links here. stored = committed to a repository branch and linked by commit permalink; issue-comment = the push failed and the report was posted to the triggering issue; failed / disabled = no detail is available.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["stored", "issue-comment", "failed", "disabled"] },
+        "provider": { "const": "github" },
+        "repository": { "$ref": "#/$defs/repository" },
+        "branch": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 100 },
+        "commit": { "description": "Full commit SHA, so the link never moves.", "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 300 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 600 },
+        "sha256": { "description": "SHA-256 of the linked file's bytes.", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "stored" } } }, "then": { "required": ["provider", "repository", "branch", "commit", "path", "url", "sha256"] } },
+        { "if": { "properties": { "status": { "const": "issue-comment" } } }, "then": { "required": ["url", "reason"] } },
+        { "if": { "properties": { "status": { "enum": ["failed", "disabled"] } } }, "then": { "required": ["reason"] } }
+      ]
+    },
     "action": {
       "type": "object",
       "additionalProperties": false,
