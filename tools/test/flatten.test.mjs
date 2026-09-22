@@ -1,7 +1,8 @@
 // Reference flattener and contract rules that are easier to prove in code than with sample files.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { flatten } from '../lib/flatten.mjs';
+import { flatten, MAX_EVENT_BYTES } from '../lib/flatten.mjs';
+import { detailFiles, sha256, storedDetails } from '../lib/detail-files.mjs';
 import { createValidators, loadCatalogs, loadSamples, validateEvents, validateReport } from '../lib/contracts.mjs';
 
 const validators = createValidators();
@@ -53,9 +54,47 @@ test('report Markdown over 200 KB is rejected', () => {
   assert.match(validateReport(validators, r, catalogs).join('\n'), /must NOT have more than 204800 characters/);
 });
 
-test('a full event body stays well under the 512 KB AI Hub ingest limit', () => {
+test('events are summaries: evidence, sections and the Markdown report stay out of AI Hub (F17)', () => {
+  const r = report('iso-9001-2015--8.1--hub-service.json');
+  const [ev] = flatten(r);
+  assert.equal(ev.reportMd, undefined);
+  assert.equal(ev.sections, undefined);
+  assert.ok(ev.obligations.every((o) => o.evidence === undefined));
+  assert.deepEqual(ev.obligations.map((o) => o.evidenceCount), r.controls[0].obligations.map((o) => o.evidence.length));
   for (const name of ['iso-9001-2015--8.1--hub-service.json', 'iso-9001-2015--8.1--the-agent.json']) {
-    const bytes = Buffer.byteLength(JSON.stringify(flatten(report(name))));
-    assert.ok(bytes < 512 * 1024 / 4, `${name} is ${bytes} bytes`);
+    const bytes = Buffer.byteLength(JSON.stringify(flatten(report(name))[0]));
+    assert.ok(bytes < MAX_EVENT_BYTES, `${name} event is ${bytes} bytes`);
   }
+});
+
+test('long gap lines and summaries are cut, not rejected; the full text is in the detailed report', () => {
+  const r = report('iso-9001-2015--8.1--the-agent.json');
+  r.controls[0].obligations[0].gap = 'g'.repeat(1500);
+  r.controls[0].summary = 's'.repeat(3500);
+  const [ev] = flatten(r);
+  assert.equal(ev.obligations[0].gap.length, 300);
+  assert.ok(ev.obligations[0].gap.endsWith('…'));
+  assert.equal(ev.summary.length, 2000);
+  assert.deepEqual(validateEvents(validators, [ev], catalogs), []);
+});
+
+test('without a stored detail the event says so, and still validates', () => {
+  const [ev] = flatten(report('iso-9001-2015--8.1--hub-service.json'));
+  assert.equal(ev.detail.status, 'disabled');
+  assert.deepEqual(validateEvents(validators, [ev], catalogs), []);
+});
+
+test('a stored detail links each control to its own file by commit permalink and hash (F18)', () => {
+  const r = report('iso-27001-2022--multi--synthetic.json');
+  const commit = 'a'.repeat(40);
+  const details = storedDetails(r, { repository: r.repository, branch: 'compliance-audits', commit });
+  const events = flatten(r, { details });
+  const files = detailFiles(r);
+  events.forEach((ev, i) => {
+    assert.equal(ev.detail.path, files.controls[i].path);
+    assert.equal(ev.detail.url, `https://github.com/${r.repository}/blob/${commit}/${files.controls[i].path}`);
+    assert.equal(ev.detail.sha256, sha256(files.controls[i].content));
+  });
+  assert.match(files.folder, /^audits\/iso-27001-2022\/20260920T093000Z--exec-sample-27001$/);
+  assert.deepEqual(validateEvents(validators, events, catalogs), []);
 });

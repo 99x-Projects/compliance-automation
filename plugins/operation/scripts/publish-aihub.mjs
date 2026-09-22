@@ -8029,6 +8029,24 @@ import { execFileSync } from "node:child_process";
 var DEFAULT_ACTOR = "ISO Audit Agent";
 var EVENT_SCHEMA = "compliance.v1";
 var USAGE_KEYS = ["tokens", "cacheReadTokens", "costUsd", "model"];
+var MAX_EVENT_BYTES = 16 * 1024;
+var MAX_GAP = 300;
+var MAX_SUMMARY = 2e3;
+var NO_DETAIL = { status: "disabled", reason: "the detailed report was not stored" };
+function cut(text, max) {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}\u2026`;
+}
+function summariseObligation(o) {
+  return {
+    n: o.n,
+    title: o.title,
+    core: o.core,
+    verdict: o.verdict,
+    ...o.originalVerdict !== void 0 ? { originalVerdict: o.originalVerdict } : {},
+    gap: cut(o.gap, MAX_GAP),
+    evidenceCount: o.evidence.length
+  };
+}
 function eventIdFor(report, control) {
   return `${report.standardKey}:${control}:${report.repository}:${report.executionId}`;
 }
@@ -8037,7 +8055,7 @@ function tally(obligations) {
   for (const o of obligations) counts[o.verdict] += 1;
   return counts;
 }
-function flatten(report, { actor = DEFAULT_ACTOR } = {}) {
+function flatten(report, { actor = DEFAULT_ACTOR, details = {} } = {}) {
   const sourcesOk = report.sources.filter((s) => s.verdict === "ok").length;
   return report.controls.map((c, index) => {
     const t = tally(c.obligations);
@@ -8075,13 +8093,12 @@ function flatten(report, { actor = DEFAULT_ACTOR } = {}) {
       eventId: eventIdFor(report, c.control),
       actors: [actor],
       dimensions,
-      summary: c.summary,
-      obligations: c.obligations,
+      summary: cut(c.summary, MAX_SUMMARY),
+      obligations: c.obligations.map(summariseObligation),
       actions: c.actions,
       sources: report.sources,
-      sections: c.sections,
       notAssessed: report.notAssessed,
-      reportMd: c.reportMd
+      detail: details[c.control] ?? NO_DETAIL
     };
   });
 }
@@ -8165,6 +8182,47 @@ var compliance_common_v1_schema_default = {
           maxLength: 2e3
         }
       }
+    },
+    obligationSummary: {
+      description: "An obligation as AI Hub stores it. Evidence stays in the detailed report in the repository; only its count travels.",
+      type: "object",
+      additionalProperties: false,
+      required: ["n", "title", "core", "verdict", "gap", "evidenceCount"],
+      properties: {
+        n: { type: "integer", minimum: 1, maximum: 999 },
+        title: { $ref: "#/$defs/text" },
+        core: { type: "boolean" },
+        verdict: { $ref: "#/$defs/verdict" },
+        originalVerdict: { type: "string", minLength: 1, maxLength: 64 },
+        gap: {
+          description: "What is missing, cut to 300 characters. The full text is in the detailed report.",
+          type: "string",
+          maxLength: 300
+        },
+        evidenceCount: { type: "integer", minimum: 0 }
+      }
+    },
+    detail: {
+      description: "Where the detailed report for this control is kept; AI Hub stores the summary and links here. stored = committed to a repository branch and linked by commit permalink; issue-comment = the push failed and the report was posted to the triggering issue; failed / disabled = no detail is available.",
+      type: "object",
+      additionalProperties: false,
+      required: ["status"],
+      properties: {
+        status: { enum: ["stored", "issue-comment", "failed", "disabled"] },
+        provider: { const: "github" },
+        repository: { $ref: "#/$defs/repository" },
+        branch: { type: "string", pattern: "^[A-Za-z0-9._/-]+$", maxLength: 100 },
+        commit: { description: "Full commit SHA, so the link never moves.", type: "string", pattern: "^[0-9a-f]{40}$" },
+        path: { type: "string", pattern: "^[A-Za-z0-9._/-]+$", maxLength: 300 },
+        url: { type: "string", format: "uri", pattern: "^https://", maxLength: 600 },
+        sha256: { description: "SHA-256 of the linked file's bytes.", type: "string", pattern: "^[0-9a-f]{64}$" },
+        reason: { type: "string", minLength: 1, maxLength: 300 }
+      },
+      allOf: [
+        { if: { properties: { status: { const: "stored" } } }, then: { required: ["provider", "repository", "branch", "commit", "path", "url", "sha256"] } },
+        { if: { properties: { status: { const: "issue-comment" } } }, then: { required: ["url", "reason"] } },
+        { if: { properties: { status: { enum: ["failed", "disabled"] } } }, then: { required: ["reason"] } }
+      ]
     },
     action: {
       type: "object",
@@ -8356,14 +8414,14 @@ var compliance_event_v1_schema_default = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
   $id: "https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v1.schema.json",
   title: "Compliance event for AI Hub (v1)",
-  description: "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. 'dimensions' holds flat, queryable facts; everything else is stored as the event's webhookPayload for detail views.",
+  description: "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. Summary only: 'dimensions' holds flat, queryable facts, and obligations, actions and sources carry what dashboards show. Evidence, report sections and the full Markdown report stay in a repository, linked by 'detail'. Each event must stay under 16 KB.",
   type: "array",
   minItems: 1,
   maxItems: 200,
   items: {
     type: "object",
     additionalProperties: false,
-    required: ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "sections", "notAssessed", "reportMd"],
+    required: ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "notAssessed", "detail"],
     properties: {
       correlationId: {
         description: "The audit execution id. Groups every control from one execution.",
@@ -8420,12 +8478,12 @@ var compliance_event_v1_schema_default = {
           model: { type: "string", minLength: 1, maxLength: 120 }
         }
       },
-      summary: { type: "string", minLength: 1, maxLength: 4e3 },
+      summary: { type: "string", minLength: 1, maxLength: 2e3 },
       obligations: {
         type: "array",
         minItems: 1,
         maxItems: 200,
-        items: { $ref: "compliance-common.v1.schema.json#/$defs/obligation" }
+        items: { $ref: "compliance-common.v1.schema.json#/$defs/obligationSummary" }
       },
       actions: {
         type: "array",
@@ -8438,17 +8496,12 @@ var compliance_event_v1_schema_default = {
         maxItems: 50,
         items: { $ref: "compliance-common.v1.schema.json#/$defs/source" }
       },
-      sections: {
-        type: "array",
-        maxItems: 30,
-        items: { $ref: "compliance-common.v1.schema.json#/$defs/section" }
-      },
       notAssessed: {
         type: "array",
         maxItems: 50,
         items: { type: "string", minLength: 1, maxLength: 300 }
       },
-      reportMd: { type: "string", minLength: 1, maxLength: 204800 }
+      detail: { $ref: "compliance-common.v1.schema.json#/$defs/detail" }
     }
   }
 };
@@ -8572,7 +8625,7 @@ function checkObligationsAndActions(obligations, actions, sources, where) {
     if (numbers.has(o.n)) errors.push(`${where}: duplicate obligation number ${o.n}`);
     numbers.add(o.n);
     const sourceIds = new Set(sources.map((s) => s.id));
-    for (const e of o.evidence) {
+    for (const e of o.evidence ?? []) {
       if (e.kind !== "external" && !sourceIds.has(e.sourceId)) {
         errors.push(`${where}: obligation ${o.n} cites source '${e.sourceId}', which is not in sources`);
       }
@@ -8603,6 +8656,17 @@ function checkReport(report, catalogs) {
   }
   return errors;
 }
+function checkDetail(detail, d, where) {
+  if (detail?.status !== "stored") return [];
+  const errors = [];
+  if (!detail.url.endsWith(`/${detail.repository}/blob/${detail.commit}/${detail.path}`)) {
+    errors.push(`${where}: detail.url must be the commit permalink \u2026/${detail.repository}/blob/${detail.commit}/${detail.path}`);
+  }
+  if (!detail.path.startsWith(`audits/${d.standardKey}/`) || !detail.path.endsWith(".md")) {
+    errors.push(`${where}: detail.path must be a Markdown file under audits/${d.standardKey}/`);
+  }
+  return errors;
+}
 function checkEvents(events, catalogs) {
   const index = catalogIndex(catalogs);
   const errors = [];
@@ -8628,6 +8692,9 @@ function checkEvents(events, catalogs) {
     if (d.notAssessedCount !== ev.notAssessed.length) errors.push(`${where}: dimensions.notAssessedCount does not match notAssessed`);
     errors.push(...checkControlAgainstCatalog(index, d.standardKey, d.control, d.controlTitle, d.controlGroup, where));
     errors.push(...checkObligationsAndActions(ev.obligations, ev.actions, ev.sources, where));
+    const bytes = new TextEncoder().encode(JSON.stringify(ev)).length;
+    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the repository report`);
+    errors.push(...checkDetail(ev.detail, d, where));
     if (d.tokens !== void 0 || d.costUsd !== void 0) {
       usageCarriers.set(ev.correlationId, (usageCarriers.get(ev.correlationId) ?? 0) + 1);
     }
@@ -8673,6 +8740,52 @@ function validateEvents(validators, events, catalogs) {
   return withSemantic(validators.event(events), () => checkEvents(events, catalogs));
 }
 
+// lib/detail-files.mjs
+import { createHash } from "node:crypto";
+var DEFAULT_DETAIL_BRANCH = "compliance-audits";
+var safe = (s) => String(s).replace(/[^A-Za-z0-9._-]/g, "-");
+function detailFolder(report) {
+  const stamp = report.runAt.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  return `audits/${report.standardKey}/${stamp}--${safe(report.executionId)}`;
+}
+function sha256(text) {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+function detailFiles(report) {
+  const folder = detailFolder(report);
+  const controls = report.controls.map((c) => ({
+    control: c.control,
+    path: `${folder}/${safe(c.control)}.md`,
+    content: c.reportMd.endsWith("\n") ? c.reportMd : `${c.reportMd}
+`
+  }));
+  return {
+    folder,
+    controls,
+    files: [
+      { path: `${folder}/compliance-report.json`, content: `${JSON.stringify(report, null, 2)}
+` },
+      ...controls.map(({ path, content }) => ({ path, content }))
+    ]
+  };
+}
+function blobUrl(serverUrl, repository, commit, path) {
+  return `${serverUrl.replace(/\/+$/, "")}/${repository}/blob/${commit}/${path}`;
+}
+function storedDetails(report, { repository, branch, commit, serverUrl = "https://github.com" }) {
+  const { controls } = detailFiles(report);
+  return Object.fromEntries(controls.map((c) => [c.control, {
+    status: "stored",
+    provider: "github",
+    repository,
+    branch,
+    commit,
+    path: c.path,
+    url: blobUrl(serverUrl, repository, commit, c.path),
+    sha256: sha256(c.content)
+  }]));
+}
+
 // lib/publisher/config.mjs
 function envValue(env, name) {
   const dashed = name.replace(/_/g, "-");
@@ -8690,7 +8803,13 @@ function readConfig(env) {
     actor: envValue(env, "AIHUB_ACTOR") ?? "ISO Audit Agent",
     executionId: envValue(env, "EXECUTION_ID"),
     fallbackIssue: envValue(env, "AIHUB_FALLBACK_ISSUE"),
-    githubToken: envValue(env, "GITHUB_TOKEN")
+    githubToken: envValue(env, "GITHUB_TOKEN"),
+    githubApiUrl: (envValue(env, "GITHUB_API_URL") ?? "https://api.github.com").replace(/\/+$/, ""),
+    githubServerUrl: (envValue(env, "GITHUB_SERVER_URL") ?? "https://github.com").replace(/\/+$/, ""),
+    // Where the detailed report goes. Default: the audited repository, branch compliance-audits.
+    detailStore: envValue(env, "COMPLIANCE_DETAIL_STORE")?.toLowerCase() ?? "github",
+    detailRepo: envValue(env, "COMPLIANCE_DETAIL_REPO")?.toLowerCase(),
+    detailBranch: envValue(env, "COMPLIANCE_DETAIL_BRANCH") ?? DEFAULT_DETAIL_BRANCH
   };
 }
 function configErrors(config) {
@@ -8709,7 +8828,18 @@ function configErrors(config) {
   if (config.fallbackIssue && !/^[\w.-]+\/[\w.-]+#\d+$/.test(config.fallbackIssue)) {
     errors.push("AIHUB_FALLBACK_ISSUE must look like owner/repo#123");
   }
+  if (!["github", "off"].includes(config.detailStore)) errors.push("COMPLIANCE_DETAIL_STORE must be github or off");
+  if (config.detailRepo && !/^[a-z0-9._-]+\/[a-z0-9._-]+$/.test(config.detailRepo)) {
+    errors.push("COMPLIANCE_DETAIL_REPO must look like owner/repo");
+  }
+  if (!/^[A-Za-z0-9._/-]+$/.test(config.detailBranch) || config.detailBranch.includes("..")) {
+    errors.push("COMPLIANCE_DETAIL_BRANCH is not a valid branch name");
+  }
   return errors;
+}
+function detailWarnings(config) {
+  if (!config.publish || config.detailStore === "off") return [];
+  return config.githubToken ? [] : ["GITHUB_TOKEN is not set: the detailed report cannot be committed and AI Hub will show the summary only"];
 }
 function ingestUrl(config) {
   return `${config.url}/metrics/nodes/${encodeURIComponent(config.nodeId)}/node-activities/${encodeURIComponent(config.activityId)}/events`;
@@ -8813,8 +8943,19 @@ function redactDeep(value, secretValues) {
   return { value: walk(value), count: total };
 }
 
+// lib/publisher/github.mjs
+function githubHeaders(config) {
+  return {
+    Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
+    ...config.githubToken ? { Authorization: `Bearer ${config.githubToken}` } : {},
+    "User-Agent": "compliance-automation-publisher"
+  };
+}
+
 // lib/publisher/deliver.mjs
 var COMMENT_MARKER = "<!-- aihub-compliance-event -->";
+var DETAIL_MARKER = "<!-- compliance-detail-report -->";
 var GITHUB_COMMENT_LIMIT = 65536;
 async function postEvents(events, config, { fetchImpl = fetch, sleep = defaultSleep, attempts = 3 } = {}) {
   let last = { ok: false, status: 0, error: "not attempted", attempts: 0 };
@@ -8845,10 +8986,23 @@ async function checkReachable(config, { fetchImpl = fetch } = {}) {
     return { reachable: false, error: String(err?.message ?? err) };
   }
 }
-function buildIssueComment(events, reason) {
+function buildIssueComments(events, reason) {
+  const chunks = [];
+  let current = [];
+  for (const event of events) {
+    if (current.length && buildIssueComment([...current, event], reason).length > GITHUB_COMMENT_LIMIT) {
+      chunks.push(current);
+      current = [];
+    }
+    current.push(event);
+  }
+  if (current.length) chunks.push(current);
+  return chunks.map((chunk, i) => buildIssueComment(chunk, reason, chunks.length > 1 ? `part ${i + 1} of ${chunks.length}` : ""));
+}
+function buildIssueComment(events, reason, part = "") {
   const header = [
     COMMENT_MARKER,
-    "### Compliance results were not delivered to AI Hub",
+    `### Compliance results were not delivered to AI Hub${part ? ` (${part})` : ""}`,
     "",
     `Reason: ${reason}`,
     "",
@@ -8867,12 +9021,24 @@ ${json}
 
 </details>
 `;
-  let body = wrap(JSON.stringify(events, null, 2));
-  if (body.length > GITHUB_COMMENT_LIMIT) {
-    const slim = events.map((e) => ({ ...e, reportMd: "(omitted: too large for a GitHub comment \u2014 see the run output)" }));
-    body = wrap(JSON.stringify(slim));
-  }
-  return body;
+  const body = wrap(JSON.stringify(events, null, 2));
+  return body.length > GITHUB_COMMENT_LIMIT ? wrap(JSON.stringify(events)) : body;
+}
+function buildDetailComment(control, markdown, reason) {
+  const header = [
+    DETAIL_MARKER,
+    `### Detailed compliance report: ${control}`,
+    "",
+    `It could not be committed to the repository (${reason}), so it is kept here. AI Hub links to this comment.`,
+    "",
+    "---",
+    ""
+  ].join("\n");
+  const room = GITHUB_COMMENT_LIMIT - header.length - 200;
+  return header + (markdown.length > room ? `${markdown.slice(0, room)}
+
+\u2026[truncated to fit a GitHub comment]
+` : markdown);
 }
 function parseIssueComment(body) {
   if (!body.includes(COMMENT_MARKER)) throw new Error("comment was not written by the compliance publisher");
@@ -8891,7 +9057,7 @@ function parseCommentUrl(url) {
 async function postIssueComment(config, body, { fetchImpl = fetch } = {}) {
   const issue = parseIssueRef(config.fallbackIssue ?? "");
   if (!issue || !config.githubToken) return { ok: false, error: "no fallback issue or GitHub token configured" };
-  const response = await fetchImpl(`https://api.github.com/repos/${issue.owner}/${issue.repo}/issues/${issue.number}/comments`, {
+  const response = await fetchImpl(`${config.githubApiUrl}/repos/${issue.owner}/${issue.repo}/issues/${issue.number}/comments`, {
     method: "POST",
     headers: githubHeaders(config),
     body: JSON.stringify({ body })
@@ -8902,35 +9068,101 @@ async function postIssueComment(config, body, { fetchImpl = fetch } = {}) {
 async function fetchIssueComment(config, url, { fetchImpl = fetch } = {}) {
   const ref = parseCommentUrl(url);
   if (!ref) throw new Error("expected a GitHub comment URL like https://github.com/o/r/issues/1#issuecomment-123");
-  const response = await fetchImpl(`https://api.github.com/repos/${ref.owner}/${ref.repo}/issues/comments/${ref.commentId}`, {
+  const response = await fetchImpl(`${config.githubApiUrl}/repos/${ref.owner}/${ref.repo}/issues/comments/${ref.commentId}`, {
     headers: githubHeaders(config)
   });
   if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
   return (await response.json()).body;
 }
-function githubHeaders(config) {
-  return {
-    Accept: "application/vnd.github+json",
-    "Content-Type": "application/json",
-    ...config.githubToken ? { Authorization: `Bearer ${config.githubToken}` } : {},
-    "User-Agent": "compliance-automation-publisher"
-  };
-}
 function defaultSleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// lib/publisher/store-detail.mjs
+var MAX_ATTEMPTS = 3;
+async function call(fetchImpl, config, method, path, body) {
+  const response = await fetchImpl(`${config.githubApiUrl}${path}`, {
+    method,
+    headers: githubHeaders(config),
+    ...body ? { body: JSON.stringify(body) } : {}
+  });
+  const data = await response.json().catch(() => ({}));
+  return { status: response.status, ok: response.ok, data };
+}
+var GitHubError = class extends Error {
+  constructor(step, status) {
+    super(`${step}: GitHub returned ${status}`);
+    this.status = status;
+  }
+};
+async function commitOnce(files, report, target, config, fetchImpl) {
+  const repo = `/repos/${target.repository}`;
+  const ref = await call(fetchImpl, config, "GET", `${repo}/git/ref/heads/${target.branch}`);
+  if (!ref.ok && ref.status !== 404) throw new GitHubError("read branch", ref.status);
+  const parent = ref.ok ? ref.data.object.sha : null;
+  let baseTree;
+  if (parent) {
+    const commit2 = await call(fetchImpl, config, "GET", `${repo}/git/commits/${parent}`);
+    if (!commit2.ok) throw new GitHubError("read branch head", commit2.status);
+    baseTree = commit2.data.tree.sha;
+  }
+  const tree = await call(fetchImpl, config, "POST", `${repo}/git/trees`, {
+    ...baseTree ? { base_tree: baseTree } : {},
+    tree: files.map((f) => ({ path: f.path, mode: "100644", type: "blob", content: f.content }))
+  });
+  if (!tree.ok) throw new GitHubError("write tree", tree.status);
+  const controls = report.controls.map((c) => `${c.control} ${c.overall}`).join(", ");
+  const commit = await call(fetchImpl, config, "POST", `${repo}/git/commits`, {
+    message: `Compliance audit ${report.standardKey} (${controls})
+
+Execution: ${report.executionId}
+Audited: ${report.repository}@${report.baseline.commit}
+Run at: ${report.runAt}
+`,
+    tree: tree.data.sha,
+    parents: parent ? [parent] : []
+  });
+  if (!commit.ok) throw new GitHubError("write commit", commit.status);
+  const move = parent ? await call(fetchImpl, config, "PATCH", `${repo}/git/refs/heads/${target.branch}`, { sha: commit.data.sha, force: false }) : await call(fetchImpl, config, "POST", `${repo}/git/refs`, { ref: `refs/heads/${target.branch}`, sha: commit.data.sha });
+  if (!move.ok) throw new GitHubError("move branch", move.status);
+  return commit.data.sha;
+}
+async function storeDetail(report, config, { fetchImpl = fetch } = {}) {
+  const target = { repository: config.detailRepo ?? report.repository, branch: config.detailBranch };
+  const { files } = detailFiles(report);
+  let lastError;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const commit = await commitOnce(files, report, target, config, fetchImpl);
+      return {
+        ok: true,
+        commit,
+        details: storedDetails(report, { ...target, commit, serverUrl: config.githubServerUrl }),
+        target
+      };
+    } catch (err) {
+      lastError = err;
+      const race = err instanceof GitHubError && [409, 422].includes(err.status) && err.message.startsWith("move branch");
+      if (!race) break;
+    }
+  }
+  return { ok: false, error: String(lastError?.message ?? lastError), target };
+}
+
 // lib/publisher/run.mjs
+var MAX_DETAIL_COMMENTS = 10;
 var USAGE = `Usage: publish-aihub [options]
   --check               check publishing configuration and exit
   --report <path>       skill output to publish (default: compliance-report.json)
   --out <path>          where to write the events (default: aihub-event.json)
   --dry-run             build, validate and write the events, but do not POST
   --from-file <path>    re-send events saved earlier
-  --from-issue <url>    re-send events from a fallback GitHub issue comment
+  --from-issue <url>    re-send events from a fallback GitHub issue comment (repeat for each part)
 
 Environment: AIHUB_PUBLISH=1 to POST; AIHUB_URL, AIHUB_NODE_ID, AIHUB_ACTIVITY_ID, AIHUB_API_KEY;
-optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n) with GITHUB_TOKEN.`;
+GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off,
+COMPLIANCE_DETAIL_REPO default: the audited repository, COMPLIANCE_DETAIL_BRANCH default: compliance-audits);
+optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n).`;
 function parseArgs(argv) {
   const opts = { report: "compliance-report.json", out: "aihub-event.json" };
   for (let i = 0; i < argv.length; i += 1) {
@@ -8938,7 +9170,10 @@ function parseArgs(argv) {
     if (a === "--check") opts.check = true;
     else if (a === "--dry-run") opts.dryRun = true;
     else if (a === "--help" || a === "-h") opts.help = true;
-    else if (["--report", "--out", "--from-file", "--from-issue"].includes(a)) {
+    else if (a === "--from-issue") {
+      if (!argv[i + 1]) throw new Error(`${a} needs a value`);
+      (opts.fromIssue ??= []).push(argv[i += 1]);
+    } else if (["--report", "--out", "--from-file"].includes(a)) {
       const key = a.slice(2).replace(/-(\w)/g, (_, c) => c.toUpperCase());
       opts[key] = argv[i += 1];
       if (!opts[key]) throw new Error(`${a} needs a value`);
@@ -8971,6 +9206,7 @@ ${USAGE}`);
       for (const e of cfgErrors) log(`\u2717 ${e}`);
       return 3;
     }
+    for (const w of detailWarnings(config)) log(`\u26A0 ${w}`);
     const reach = await checkReachable(config, { fetchImpl });
     log(reach.reachable ? `\u2713 publishing configured; AI Hub answered (${reach.status})` : `\u26A0 publishing configured, but AI Hub did not answer (${reach.error}). The audit runs anyway; delivery retries at the end.`);
     return 0;
@@ -8979,7 +9215,11 @@ ${USAGE}`);
   let events;
   if (opts.fromFile || opts.fromIssue) {
     try {
-      events = opts.fromFile ? JSON.parse(await readText(opts.fromFile)) : parseIssueComment(await fetchIssueComment(config, opts.fromIssue, { fetchImpl }));
+      if (opts.fromFile) events = JSON.parse(await readText(opts.fromFile));
+      else {
+        events = [];
+        for (const url of opts.fromIssue) events.push(...parseIssueComment(await fetchIssueComment(config, url, { fetchImpl })));
+      }
     } catch (err) {
       log(`\u2717 could not load events: ${err.message}`);
       return 2;
@@ -9012,7 +9252,14 @@ ${USAGE}`);
       for (const e of reportErrors) log(`    ${e}`);
       return 2;
     }
-    events = flatten(report, { actor: config.actor });
+    const previewErrors = validateEvents(validators, flatten(report, { actor: config.actor }), catalogs);
+    if (previewErrors.length) {
+      for (const e of previewErrors) log(`\u2717 ${e}`);
+      return 2;
+    }
+    const willPublish = config.publish && !opts.dryRun && cfgErrors.length === 0;
+    const details = willPublish ? await resolveDetails(report, config, { fetchImpl, log }) : allDetails(report, { status: "disabled", reason: opts.dryRun ? "dry run" : "publishing is off" });
+    events = flatten(report, { actor: config.actor, details });
     const eventErrors = validateEvents(validators, events, catalogs);
     if (eventErrors.length) {
       for (const e of eventErrors) log(`\u2717 ${e}`);
@@ -9037,13 +9284,47 @@ ${USAGE}`);
   }
   const reason = `AI Hub returned ${result.status || "no response"} after ${result.attempts} attempt(s): ${result.error}`;
   log(`\u2717 ${reason}`);
-  const comment = await postIssueComment(config, buildIssueComment(events, reason), { fetchImpl });
-  if (comment.ok) {
-    log(`\u2713 results preserved in ${comment.url} \u2014 re-send later with --from-issue`);
-    return 0;
+  const urls = [];
+  for (const body of buildIssueComments(events, reason)) {
+    const comment = await postIssueComment(config, body, { fetchImpl });
+    if (!comment.ok) {
+      log(`\u2717 fallback comment failed (${comment.error}); events remain in ${opts.out} for this run only`);
+      return 4;
+    }
+    urls.push(comment.url);
   }
-  log(`\u2717 fallback comment failed (${comment.error}); events remain in ${opts.out} for this run only`);
-  return 4;
+  log(`\u2713 results preserved in ${urls.join(", ")} \u2014 re-send later with ${urls.map((u) => `--from-issue ${u}`).join(" ")}`);
+  return 0;
+}
+function allDetails(report, detail) {
+  return Object.fromEntries(report.controls.map((c) => [c.control, detail]));
+}
+var reasonText = (text) => text.length > 300 ? `${text.slice(0, 299)}\u2026` : text;
+async function resolveDetails(report, config, { fetchImpl, log }) {
+  if (config.detailStore === "off") {
+    return allDetails(report, { status: "disabled", reason: "COMPLIANCE_DETAIL_STORE is off" });
+  }
+  if (!config.githubToken) {
+    log("\u26A0 GITHUB_TOKEN is not set: the detailed report is not stored; AI Hub gets the summary only");
+    return allDetails(report, { status: "failed", reason: "no GitHub token in the run" });
+  }
+  const stored = await storeDetail(report, config, { fetchImpl });
+  if (stored.ok) {
+    log(`\u2713 detailed report committed to ${stored.target.repository}@${stored.target.branch} (${stored.commit.slice(0, 7)})`);
+    return stored.details;
+  }
+  const reason = reasonText(`commit to ${stored.target.repository}@${stored.target.branch} failed: ${stored.error}`);
+  log(`\u26A0 ${reason}`);
+  if (!config.fallbackIssue || report.controls.length > MAX_DETAIL_COMMENTS) {
+    return allDetails(report, { status: "failed", reason });
+  }
+  const details = {};
+  for (const c of detailFiles(report).controls) {
+    const comment = await postIssueComment(config, buildDetailComment(c.control, c.content, reason), { fetchImpl });
+    details[c.control] = comment.ok ? { status: "issue-comment", url: comment.url, reason } : { status: "failed", reason };
+    if (comment.ok) log(`\u2713 detailed report for ${c.control} kept in ${comment.url}`);
+  }
+  return details;
 }
 
 // publisher-entry.mjs

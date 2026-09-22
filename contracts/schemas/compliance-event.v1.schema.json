@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v1.schema.json",
   "title": "Compliance event for AI Hub (v1)",
-  "description": "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. 'dimensions' holds flat, queryable facts; everything else is stored as the event's webhookPayload for detail views.",
+  "description": "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. Summary only: 'dimensions' holds flat, queryable facts, and obligations, actions and sources carry what dashboards show. Evidence, report sections and the full Markdown report stay in a repository, linked by 'detail'. Each event must stay under 16 KB.",
   "type": "array",
   "minItems": 1,
   "maxItems": 200,
   "items": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "sections", "notAssessed", "reportMd"],
+    "required": ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "notAssessed", "detail"],
     "properties": {
       "correlationId": {
         "description": "The audit execution id. Groups every control from one execution.",
@@ -59,10 +59,10 @@
           "model": { "type": "string", "minLength": 1, "maxLength": 120 }
         }
       },
-      "summary": { "type": "string", "minLength": 1, "maxLength": 4000 },
+      "summary": { "type": "string", "minLength": 1, "maxLength": 2000 },
       "obligations": {
         "type": "array", "minItems": 1, "maxItems": 200,
-        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/obligation" }
+        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/obligationSummary" }
       },
       "actions": {
         "type": "array", "maxItems": 100,
@@ -72,15 +72,11 @@
         "type": "array", "minItems": 1, "maxItems": 50,
         "items": { "$ref": "compliance-common.v1.schema.json#/$defs/source" }
       },
-      "sections": {
-        "type": "array", "maxItems": 30,
-        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/section" }
-      },
       "notAssessed": {
         "type": "array", "maxItems": 50,
         "items": { "type": "string", "minLength": 1, "maxLength": 300 }
       },
-      "reportMd": { "type": "string", "minLength": 1, "maxLength": 204800 }
+      "detail": { "$ref": "compliance-common.v1.schema.json#/$defs/detail" }
     }
   }
 }

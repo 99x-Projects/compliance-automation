@@ -35,244 +35,89 @@
         "n": 1,
         "title": "Product and service requirements determined",
         "core": true,
-        "verdict": "Pass",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/architecture.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/tenant-isolation-design.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/rules-json.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/ai-dlc-ping-pong.md"
-          }
-        ],
-        "gap": "Objectives and design goals, not a versioned requirement set; no customer or statutory data-handling requirements."
+        "verdict": "Mostly",
+        "gap": "Objectives and design goals, not a versioned requirement set; no customer or statutory data-handling requirements.",
+        "evidenceCount": 4
       },
       {
         "n": 2,
         "title": "Criteria for processes established",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/ai-dlc-ping-pong.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": ".github/workflows/publish-executor.yml"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/azure-deployment.md"
-          }
-        ],
-        "gap": "Service process defined; internal development, review and release criteria not written down."
+        "gap": "Service process defined; internal development, review and release criteria not written down.",
+        "evidenceCount": 3
       },
       {
         "n": 3,
         "title": "Criteria for acceptance of products and services established",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Executor/tests/integration_test.sh"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "tests/e2e/README.md"
-          }
-        ],
-        "gap": "No acceptance criteria for agent releases; e2e suite manual only; no named acceptor."
+        "gap": "No acceptance criteria for agent releases; e2e suite manual only; no named acceptor.",
+        "evidenceCount": 2
       },
       {
         "n": 4,
         "title": "Resources needed for conformity determined",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/azure-infrastructure.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "TheAgent/EnvConfig.cs"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Executor/Dockerfile"
-          }
-        ],
-        "gap": "People, roles and skills not determined."
+        "gap": "People, roles and skills not determined.",
+        "evidenceCount": 3
       },
       {
         "n": 5,
         "title": "Processes controlled in accordance with the criteria",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": ".github/workflows/publish-executor.yml"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "command",
-            "sourceId": "codebase",
-            "locator": "git log --merges --since=2026-08-01 (4 of 36 commits)"
-          }
-        ],
-        "gap": "Agent image publishes without running its tests; most changes land on main without a PR."
+        "gap": "Agent image publishes without running its tests; most changes land on main without a PR.",
+        "evidenceCount": 2
       },
       {
         "n": 6,
         "title": "Documented information for confidence that processes ran as planned",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "commit",
-            "sourceId": "codebase",
-            "locator": "tags v1.6.0 … vv1.10.0"
-          },
-          {
-            "provider": "github",
-            "kind": "external",
-            "sourceId": "github",
-            "locator": "GitHub Actions runs"
-          }
-        ],
-        "gap": "Inconsistent tag naming; no retention stated; no VM deployment record."
+        "gap": "Inconsistent tag naming; no retention stated; no VM deployment record.",
+        "evidenceCount": 2
       },
       {
         "n": 7,
         "title": "Documented information demonstrating product/service conformity",
         "core": true,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": ".github/workflows/publish-executor.yml"
-          }
-        ],
-        "gap": "No retained test reports or release notes; nothing for the agent image."
+        "gap": "No retained test reports or release notes; nothing for the agent image.",
+        "evidenceCount": 1
       },
       {
         "n": 8,
         "title": "Planning outputs suitable for operations",
         "core": false,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/azure-deployment.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/rules-json.md:598"
-          }
-        ],
-        "gap": "Documents have drifted from the code; no owners named."
+        "gap": "Documents have drifted from the code; no owners named.",
+        "evidenceCount": 2
       },
       {
         "n": 9,
         "title": "Planned changes controlled",
         "core": false,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/tenant-isolation-design.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/ai-dlc-ping-pong.md"
-          }
-        ],
-        "gap": "No decision-record process or change log; direct commits to main."
+        "gap": "No decision-record process or change log; direct commits to main.",
+        "evidenceCount": 2
       },
       {
         "n": 10,
         "title": "Unintended changes reviewed; adverse effects mitigated",
         "core": false,
         "verdict": "Gap",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Scripts/deploy.sh"
-          }
-        ],
-        "gap": "No incident, hotfix or rollback procedure; deploy always uses :latest."
+        "gap": "No incident, hotfix or rollback procedure; deploy always uses :latest.",
+        "evidenceCount": 1
       },
       {
         "n": 11,
         "title": "Outsourced processes identified (8.4 handoff only)",
         "core": false,
         "verdict": "Partial",
-        "evidence": [
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "README.md"
-          },
-          {
-            "provider": "git-repo",
-            "kind": "path",
-            "sourceId": "codebase",
-            "locator": "Docs/azure-infrastructure.md"
-          }
-        ],
-        "gap": "Providers mentioned but not listed with controls; third-party plugins are the main residual risk."
+        "gap": "Providers mentioned but not listed with controls; third-party plugins are the main residual risk.",
+        "evidenceCount": 2
       }
     ],
     "actions": [
@@ -369,13 +214,21 @@
         "note": "implicit fallback; docs site and issue tracker not declared"
       }
     ],
-    "sections": [],
     "notAssessed": [
       "Published documentation site",
       "Issue tracker",
       "GitHub repository settings (branch protection, environment reviewers)",
       "Azure VM runtime configuration"
     ],
-    "reportMd": "## ISO 9001:2015 — 8.1 Operational planning and control\n\n**Standard / control:** ISO 9001:2015, 8.1 Operational planning and control\n**Repository:** `xianix-team/the-agent` (local clone)\n**Baseline:** `main` @ `1d45f72` (clean working tree)\n**Sources file:** `implicit git-repo` (no `.xianix/operatio\n…(trimmed for test fixture)"
+    "detail": {
+      "status": "stored",
+      "provider": "github",
+      "repository": "xianix-team/the-agent",
+      "branch": "compliance-audits",
+      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
+      "path": "audits/iso-9001-2015/20260921T130000Z--local-2026-09-21-the-agent/8.1.md",
+      "url": "https://github.com/xianix-team/the-agent/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-9001-2015/20260921T130000Z--local-2026-09-21-the-agent/8.1.md",
+      "sha256": "4799fbe04278dfe8420a3fbbe07a11a29d7c5238a67de2ad5b90e1d875ce5360"
+    }
   }
 ]

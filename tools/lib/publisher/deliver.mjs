@@ -1,8 +1,10 @@
 // POST to AI Hub with retry, and the GitHub issue-comment fallback. Network access is injected
 // (fetchImpl, sleep) so tests run offline.
 import { ingestUrl } from './config.mjs';
+import { githubHeaders } from './github.mjs';
 
 export const COMMENT_MARKER = '<!-- aihub-compliance-event -->';
+export const DETAIL_MARKER = '<!-- compliance-detail-report -->';
 const GITHUB_COMMENT_LIMIT = 65536;
 
 export async function postEvents(events, config, { fetchImpl = fetch, sleep = defaultSleep, attempts = 3 } = {}) {
@@ -36,10 +38,25 @@ export async function checkReachable(config, { fetchImpl = fetch } = {}) {
   }
 }
 
-export function buildIssueComment(events, reason) {
+// One comment per chunk of events that fits GitHub's comment limit. Each is re-sendable on its own.
+export function buildIssueComments(events, reason) {
+  const chunks = [];
+  let current = [];
+  for (const event of events) {
+    if (current.length && buildIssueComment([...current, event], reason).length > GITHUB_COMMENT_LIMIT) {
+      chunks.push(current);
+      current = [];
+    }
+    current.push(event);
+  }
+  if (current.length) chunks.push(current);
+  return chunks.map((chunk, i) => buildIssueComment(chunk, reason, chunks.length > 1 ? `part ${i + 1} of ${chunks.length}` : ''));
+}
+
+export function buildIssueComment(events, reason, part = '') {
   const header = [
     COMMENT_MARKER,
-    '### Compliance results were not delivered to AI Hub',
+    `### Compliance results were not delivered to AI Hub${part ? ` (${part})` : ''}`,
     '',
     `Reason: ${reason}`,
     '',
@@ -51,12 +68,24 @@ export function buildIssueComment(events, reason) {
     '',
   ].join('\n');
   const wrap = (json) => `${header}<details><summary>Event JSON</summary>\n\n\`\`\`json\n${json}\n\`\`\`\n\n</details>\n`;
-  let body = wrap(JSON.stringify(events, null, 2));
-  if (body.length > GITHUB_COMMENT_LIMIT) {
-    const slim = events.map((e) => ({ ...e, reportMd: '(omitted: too large for a GitHub comment — see the run output)' }));
-    body = wrap(JSON.stringify(slim));
-  }
-  return body;
+  const body = wrap(JSON.stringify(events, null, 2));
+  return body.length > GITHUB_COMMENT_LIMIT ? wrap(JSON.stringify(events)) : body;
+}
+
+// Used when the detailed report could not be committed: the control's Markdown report goes to
+// the triggering issue instead, so it outlives the run's workspace.
+export function buildDetailComment(control, markdown, reason) {
+  const header = [
+    DETAIL_MARKER,
+    `### Detailed compliance report: ${control}`,
+    '',
+    `It could not be committed to the repository (${reason}), so it is kept here. AI Hub links to this comment.`,
+    '',
+    '---',
+    '',
+  ].join('\n');
+  const room = GITHUB_COMMENT_LIMIT - header.length - 200;
+  return header + (markdown.length > room ? `${markdown.slice(0, room)}\n\n…[truncated to fit a GitHub comment]\n` : markdown);
 }
 
 export function parseIssueComment(body) {
@@ -79,7 +108,7 @@ export function parseCommentUrl(url) {
 export async function postIssueComment(config, body, { fetchImpl = fetch } = {}) {
   const issue = parseIssueRef(config.fallbackIssue ?? '');
   if (!issue || !config.githubToken) return { ok: false, error: 'no fallback issue or GitHub token configured' };
-  const response = await fetchImpl(`https://api.github.com/repos/${issue.owner}/${issue.repo}/issues/${issue.number}/comments`, {
+  const response = await fetchImpl(`${config.githubApiUrl}/repos/${issue.owner}/${issue.repo}/issues/${issue.number}/comments`, {
     method: 'POST',
     headers: githubHeaders(config),
     body: JSON.stringify({ body }),
@@ -91,20 +120,11 @@ export async function postIssueComment(config, body, { fetchImpl = fetch } = {})
 export async function fetchIssueComment(config, url, { fetchImpl = fetch } = {}) {
   const ref = parseCommentUrl(url);
   if (!ref) throw new Error('expected a GitHub comment URL like https://github.com/o/r/issues/1#issuecomment-123');
-  const response = await fetchImpl(`https://api.github.com/repos/${ref.owner}/${ref.repo}/issues/comments/${ref.commentId}`, {
+  const response = await fetchImpl(`${config.githubApiUrl}/repos/${ref.owner}/${ref.repo}/issues/comments/${ref.commentId}`, {
     headers: githubHeaders(config),
   });
   if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
   return (await response.json()).body;
-}
-
-function githubHeaders(config) {
-  return {
-    Accept: 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-    ...(config.githubToken ? { Authorization: `Bearer ${config.githubToken}` } : {}),
-    'User-Agent': 'compliance-automation-publisher',
-  };
 }
 
 function defaultSleep(ms) {

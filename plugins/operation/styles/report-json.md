@@ -2,7 +2,9 @@
 
 Every control skill writes this file next to its Markdown report. It is the machine-readable twin of the Markdown: **same verdicts, same evidence, same actions** — never different content. The contract is [`contracts/schemas/compliance-report.v1.schema.json`](../../../contracts/schemas/compliance-report.v1.schema.json).
 
-The publisher (`scripts/publish-aihub.mjs`) validates it, fills in provenance, removes secrets, and turns it into AI Hub events.
+The publisher (`scripts/publish-aihub.mjs`) validates it, fills in provenance, removes secrets, commits it (with the Markdown report) to the repository's `compliance-audits` branch, and sends a summary to AI Hub.
+
+AI Hub shows only the summary: verdicts, the `summary` paragraph (first 2,000 characters), the **first 300 characters of each `gap`**, actions and source status. Evidence, sections and the full report are one click away, in the repository. So start each `gap` with a sentence that stands on its own, and keep `summary` to one paragraph.
 
 ---
 

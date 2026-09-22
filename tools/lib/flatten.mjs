@@ -1,10 +1,32 @@
 // Reference flattener: one compliance report (report.json) → AI Hub events (one per control).
+// Events are summaries: evidence, sections and the Markdown report stay in the repository and
+// are linked through `detail` (see detail-files.mjs).
 // The publisher (delivery step 3) uses this exact function; the golden event samples are
 // generated from it, so contract tests catch any drift between the two.
 
 export const DEFAULT_ACTOR = 'ISO Audit Agent';
 export const EVENT_SCHEMA = 'compliance.v1';
 const USAGE_KEYS = ['tokens', 'cacheReadTokens', 'costUsd', 'model'];
+export const MAX_EVENT_BYTES = 16 * 1024;
+export const MAX_GAP = 300;
+export const MAX_SUMMARY = 2000;
+const NO_DETAIL = { status: 'disabled', reason: 'the detailed report was not stored' };
+
+function cut(text, max) {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+}
+
+export function summariseObligation(o) {
+  return {
+    n: o.n,
+    title: o.title,
+    core: o.core,
+    verdict: o.verdict,
+    ...(o.originalVerdict !== undefined ? { originalVerdict: o.originalVerdict } : {}),
+    gap: cut(o.gap, MAX_GAP),
+    evidenceCount: o.evidence.length,
+  };
+}
 
 export function eventIdFor(report, control) {
   return `${report.standardKey}:${control}:${report.repository}:${report.executionId}`;
@@ -16,7 +38,8 @@ export function tally(obligations) {
   return counts;
 }
 
-export function flatten(report, { actor = DEFAULT_ACTOR } = {}) {
+// details: control id → detail object (from storedDetails or a fallback). Missing = disabled.
+export function flatten(report, { actor = DEFAULT_ACTOR, details = {} } = {}) {
   const sourcesOk = report.sources.filter((s) => s.verdict === 'ok').length;
 
   return report.controls.map((c, index) => {
@@ -59,13 +82,12 @@ export function flatten(report, { actor = DEFAULT_ACTOR } = {}) {
       eventId: eventIdFor(report, c.control),
       actors: [actor],
       dimensions,
-      summary: c.summary,
-      obligations: c.obligations,
+      summary: cut(c.summary, MAX_SUMMARY),
+      obligations: c.obligations.map(summariseObligation),
       actions: c.actions,
       sources: report.sources,
-      sections: c.sections,
       notAssessed: report.notAssessed,
-      reportMd: c.reportMd,
+      detail: details[c.control] ?? NO_DETAIL,
     };
   });
 }
