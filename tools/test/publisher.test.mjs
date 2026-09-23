@@ -114,7 +114,9 @@ function harness({ report, env = {}, responses = [], argv = [], git = fakeGit() 
   return { go: () => run({ argv, env, deps }), files, calls, logs, git };
 }
 
-const WITH_GITHUB = { ...PUBLISH_ENV, GITHUB_TOKEN: 'ghp_x0123456789abcdefghijklmnop' };
+// Storing the detail in a repository is opt-in: these tests ask for it explicitly,
+// because the default is off (the audited repository is usually the customer's).
+const WITH_GITHUB = { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'github', GITHUB_TOKEN: 'ghp_x0123456789abcdefghijklmnop' };
 
 const events = (h) => JSON.parse(h.files.get('aihub-event.json'));
 
@@ -160,6 +162,8 @@ test('secrets never leave the run: env values and known token formats are redact
     ...PUBLISH_ENV,
     DB_CONNECTION: 'Server=db;Password=Sup3rS3cret!',
     AIHUB_FALLBACK_ISSUE: 'o/r#1',
+    // Opt in to the repository store on purpose: this test must cover every path out of the run.
+    COMPLIANCE_DETAIL_STORE: 'github',
     GITHUB_TOKEN: 'ghp_realtoken0123456789abcdefghij',
   };
   // The detailed report is committed, and Hub rejects the POST, so the events also travel
@@ -365,9 +369,23 @@ test('without a fallback issue a failed commit is recorded as failed', async () 
   assert.equal(h.calls.length, 1);
 });
 
-test('no GitHub token, store off, dry run and publishing off each say why there is no detail', async () => {
+test('a token alone is not consent to write to the audited repository', async () => {
+  // The audited repository is usually the customer's. With no COMPLIANCE_DETAIL_STORE set,
+  // a run that happens to carry a GITHUB_TOKEN must still not commit anything there.
+  const env = { ...PUBLISH_ENV, GITHUB_TOKEN: 'ghp_x0123456789abcdefghijklmnop' };
+  const h = harness({ report: sample('iso-9001-2015--8.1--hub-service.json'), env });
+  assert.equal(await h.go(), 0);
+  const [ev] = events(h);
+  assert.equal(ev.detail.status, 'disabled');
+  assert.match(ev.detail.reason, /is off/);
+  assert.equal(h.git.requests.length, 0, 'nothing is written to any repository');
+  assert.equal(h.calls.length, 1, 'the summary still reaches AI Hub');
+});
+
+test('the default, no GitHub token, store off, dry run and publishing off each say why there is no detail', async () => {
   const cases = [
-    [{ env: PUBLISH_ENV }, 'failed', /no GitHub token/],
+    [{ env: PUBLISH_ENV }, 'disabled', /is off/],
+    [{ env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'github' } }, 'failed', /no GitHub token/],
     [{ env: { ...WITH_GITHUB, COMPLIANCE_DETAIL_STORE: 'off' } }, 'disabled', /is off/],
     [{ env: WITH_GITHUB, argv: ['--dry-run'] }, 'disabled', /dry run/],
     [{ env: {} }, 'disabled', /publishing is off/],
@@ -394,9 +412,17 @@ test('--check: publishing off is fine; bad config exits 3; an unreachable Hub on
   assert.equal(await harness({ argv: ['--check'] }).go(), 0);
   assert.equal(await harness({ argv: ['--check'], env: { AIHUB_PUBLISH: '1', AIHUB_URL: 'http://evil.test' } }).go(), 3);
   assert.equal(await harness({ argv: ['--check'], env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_BRANCH: '../main' } }).go(), 3);
-  const noToken = harness({ argv: ['--check'], env: PUBLISH_ENV, responses: [{ status: 200 }] });
+  // The token warning belongs to the opt-in github store; the default store warns about nothing.
+  const noToken = harness({
+    argv: ['--check'],
+    env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'github' },
+    responses: [{ status: 200 }],
+  });
   assert.equal(await noToken.go(), 0);
   assert.match(noToken.logs.join('\n'), /GITHUB_TOKEN is not set/);
+  const byDefault = harness({ argv: ['--check'], env: PUBLISH_ENV, responses: [{ status: 200 }] });
+  assert.equal(await byDefault.go(), 0);
+  assert.doesNotMatch(byDefault.logs.join('\n'), /GITHUB_TOKEN/);
   const h = harness({ argv: ['--check'], env: PUBLISH_ENV, responses: [{ throws: 'ENOTFOUND' }] });
   assert.equal(await h.go(), 0);
   assert.match(h.logs.join('\n'), /did not answer/);

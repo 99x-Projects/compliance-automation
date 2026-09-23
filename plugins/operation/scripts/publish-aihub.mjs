@@ -8806,8 +8806,10 @@ function readConfig(env) {
     githubToken: envValue(env, "GITHUB_TOKEN"),
     githubApiUrl: (envValue(env, "GITHUB_API_URL") ?? "https://api.github.com").replace(/\/+$/, ""),
     githubServerUrl: (envValue(env, "GITHUB_SERVER_URL") ?? "https://github.com").replace(/\/+$/, ""),
-    // Where the detailed report goes. Default: the audited repository, branch compliance-audits.
-    detailStore: envValue(env, "COMPLIANCE_DETAIL_STORE")?.toLowerCase() ?? "github",
+    // Where the detailed report goes. Default: nowhere. The audited repository is usually the
+    // customer's, so committing findings there has to be a deliberate choice, never a default.
+    // AI Hub's artifact store becomes the default once it exists (ADR 0019).
+    detailStore: envValue(env, "COMPLIANCE_DETAIL_STORE")?.toLowerCase() ?? "off",
     detailRepo: envValue(env, "COMPLIANCE_DETAIL_REPO")?.toLowerCase(),
     detailBranch: envValue(env, "COMPLIANCE_DETAIL_BRANCH") ?? DEFAULT_DETAIL_BRANCH
   };
@@ -9160,7 +9162,7 @@ var USAGE = `Usage: publish-aihub [options]
   --from-issue <url>    re-send events from a fallback GitHub issue comment (repeat for each part)
 
 Environment: AIHUB_PUBLISH=1 to POST; AIHUB_URL, AIHUB_NODE_ID, AIHUB_ACTIVITY_ID, AIHUB_API_KEY;
-GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off,
+GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off, default off,
 COMPLIANCE_DETAIL_REPO default: the audited repository, COMPLIANCE_DETAIL_BRANCH default: compliance-audits);
 optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n).`;
 function parseArgs(argv) {

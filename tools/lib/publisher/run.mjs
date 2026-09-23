@@ -31,7 +31,7 @@ export const USAGE = `Usage: publish-aihub [options]
   --from-issue <url>    re-send events from a fallback GitHub issue comment (repeat for each part)
 
 Environment: AIHUB_PUBLISH=1 to POST; AIHUB_URL, AIHUB_NODE_ID, AIHUB_ACTIVITY_ID, AIHUB_API_KEY;
-GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off,
+GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off, default off,
 COMPLIANCE_DETAIL_REPO default: the audited repository, COMPLIANCE_DETAIL_BRANCH default: compliance-audits);
 optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n).`;
 

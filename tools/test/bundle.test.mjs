@@ -65,6 +65,7 @@ test('the bundled publisher validates, redacts, commits the detail and POSTs the
       AIHUB_ACTIVITY_ID: 'na_NfPIrObtec',
       'AIHUB-API-KEY': 'ah_tm_testkey1234567890',
       EXECUTION_ID: 'exec-bundle-1',
+      COMPLIANCE_DETAIL_STORE: 'github',
       GITHUB_TOKEN: 'ghp_bundletoken0123456789abcdef',
       GITHUB_API_URL: `http://127.0.0.1:${port}`,
     }, dir);
