@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-common.v1.schema.json",
+  "title": "Compliance contract — shared definitions (v1)",
+  "description": "Building blocks shared by the compliance report and the AI Hub event. Standard-agnostic: nothing here is specific to ISO 9001 or to control 8.1.",
+  "$defs": {
+    "verdict": {
+      "description": "The four-level verdict scale every skill maps to. The skill keeps its own wording in originalVerdict when it differs.",
+      "enum": ["Conform", "Partial", "Gap", "N/A"]
+    },
+    "standardKey": {
+      "description": "Slug of the standard and edition, used to look up the control catalogue (e.g. iso-9001-2015, iso-27001-2022).",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "controlId": {
+      "description": "Control identifier as written in the standard (e.g. 8.1, A.5.15).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*$",
+      "maxLength": 32
+    },
+    "repository": {
+      "description": "Normalised lower-case owner/repo.",
+      "type": "string",
+      "pattern": "^[a-z0-9._-]+/[a-z0-9._-]+$",
+      "maxLength": 200
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "kind", "sourceId", "locator"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "kind": {
+          "description": "What the locator points at. 'external' = a system the audit could not link to directly.",
+          "enum": ["path", "commit", "command", "issue", "page", "url", "external"]
+        },
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "locator": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://", "maxLength": 2000 }
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "title", "core", "verdict", "evidence", "gap"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1, "maximum": 999 },
+        "title": { "$ref": "#/$defs/text" },
+        "core": {
+          "description": "Set by the skill. Whether this obligation drives the control's overall verdict is the skill's rule, not the Hub's.",
+          "type": "boolean"
+        },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "originalVerdict": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" }, "maxItems": 50 },
+        "gap": {
+          "description": "What is missing. Empty string when there is nothing to close.",
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "obligationSummary": {
+      "description": "An obligation as AI Hub stores it. Evidence stays in the detailed report in the repository; only its count travels.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "title", "core", "verdict", "gap", "evidenceCount"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1, "maximum": 999 },
+        "title": { "$ref": "#/$defs/text" },
+        "core": { "type": "boolean" },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "originalVerdict": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "gap": {
+          "description": "What is missing, cut to 300 characters. The full text is in the detailed report.",
+          "type": "string",
+          "maxLength": 300
+        },
+        "evidenceCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "detail": {
+      "description": "Where the detailed report for this control is kept; AI Hub stores the summary and links here. stored = committed to a repository branch and linked by commit permalink; issue-comment = the push failed and the report was posted to the triggering issue; failed / disabled = no detail is available.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["stored", "issue-comment", "failed", "disabled"] },
+        "provider": { "const": "github" },
+        "repository": { "$ref": "#/$defs/repository" },
+        "branch": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 100 },
+        "commit": { "description": "Full commit SHA, so the link never moves.", "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 300 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 600 },
+        "sha256": { "description": "SHA-256 of the linked file's bytes.", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "stored" } } }, "then": { "required": ["provider", "repository", "branch", "commit", "path", "url", "sha256"] } },
+        { "if": { "properties": { "status": { "const": "issue-comment" } } }, "then": { "required": ["url", "reason"] } },
+        { "if": { "properties": { "status": { "enum": ["failed", "disabled"] } } }, "then": { "required": ["reason"] } }
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["priority", "text", "closes"],
+      "properties": {
+        "priority": { "enum": ["P0", "P1", "P2", "P3"] },
+        "text": { "$ref": "#/$defs/text" },
+        "closes": {
+          "description": "Obligation numbers this action closes.",
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "artifact": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider", "roles", "verdict", "artifacts"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "provider": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "roles": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 64 }, "minItems": 1 },
+        "verdict": { "enum": ["ok", "UNAVAILABLE", "empty"] },
+        "artifacts": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "section": {
+      "description": "A report-specific table or text block (e.g. 8.1's process control map). Rendered by one generic widget, so new controls need no UI code.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "kind"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 64 },
+        "title": { "$ref": "#/$defs/text" },
+        "kind": { "enum": ["table", "text"] },
+        "columns": { "type": "array", "items": { "type": "string", "maxLength": 200 }, "minItems": 1, "maxItems": 12 },
+        "rows": {
+          "type": "array",
+          "maxItems": 200,
+          "items": { "type": "array", "items": { "type": "string", "maxLength": 2000 } }
+        },
+        "text": { "type": "string", "maxLength": 20000 }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "table" } } }, "then": { "required": ["columns", "rows"] } },
+        { "if": { "properties": { "kind": { "const": "text" } } }, "then": { "required": ["text"] } }
+      ]
+    },
+    "metricValue": {
+      "description": "A number, or — in a file awaiting Xianix raise-events — a {{metrics.*}} placeholder that Xianix fills in after the run.",
+      "oneOf": [
+        { "type": "number", "minimum": 0 },
+        { "type": "string", "pattern": "^\\{\\{metrics\\.[a-z0-9.-]+\\}\\}$" }
+      ]
+    }
+  }
+}

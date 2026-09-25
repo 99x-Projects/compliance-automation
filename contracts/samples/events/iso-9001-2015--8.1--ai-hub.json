@@ -1,0 +1,226 @@
+[
+  {
+    "correlationId": "local-2026-09-21-ai-hub",
+    "eventId": "iso-9001-2015:8.1:99x-internal/ai-hub:local-2026-09-21-ai-hub",
+    "actors": [
+      "ISO Audit Agent"
+    ],
+    "dimensions": {
+      "schema": "compliance.v1",
+      "standard": "ISO 9001:2015",
+      "standardKey": "iso-9001-2015",
+      "control": "8.1",
+      "controlTitle": "Operational planning and control",
+      "controlGroup": "8",
+      "repository": "99x-internal/ai-hub",
+      "commit": "e59aaa7",
+      "baselineRef": "development",
+      "runAt": "2026-09-21T11:00:00Z",
+      "executionId": "local-2026-09-21-ai-hub",
+      "pluginVersion": "operation@0.1.0 (local run)",
+      "overall": "Gap",
+      "conform": 1,
+      "partial": 8,
+      "gap": 2,
+      "na": 0,
+      "p0Actions": 3,
+      "sourcesOk": 1,
+      "sourcesTotal": 1,
+      "sourcesMode": "implicit-git-repo",
+      "notAssessedCount": 4
+    },
+    "summary": "99x AI Hub delivers a team-scoped AI observability console and API. Operational planning lives in the repository as phase specs with numbered requirements (`specs/phase2/REQUIREMENTS.md`), 17 dated ADRs (`docs/decisions/`), product and design briefs (`PRODUCT.md`, `DESIGN.md`) and contributor rules for people and agents (`AGENTS.md`, `.agents/skills/`). Deployment is well controlled: GitHub Actions build immutable images, apply migrations and deploy per environment, with production approval gates documented. The main gaps are on the conformity side. No automated build, test or lint gate runs before merge or deploy, there is no Definition of Done or release acceptance record, no test results or release notes are retained, and there is no written process for incidents, hotfixes or rollback. Because obligation 7 (records of product conformity) is a Gap, the overall 8.1 status is Gap.",
+    "obligations": [
+      {
+        "n": 1,
+        "title": "Product and service requirements determined",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "Later capabilities (tenants, webhook mapping, regatta) are recorded only as ADRs or code, not as requirements. Requirements aren't linked to acceptance. Standards commitments are undecided.",
+        "evidenceCount": 3
+      },
+      {
+        "n": 2,
+        "title": "Criteria for processes established",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "No end-to-end delivery process with entry conditions, roles or measures.",
+        "evidenceCount": 3
+      },
+      {
+        "n": 3,
+        "title": "Criteria for acceptance of products and services established",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "No Definition of Done or release acceptance criteria; no named acceptor.",
+        "evidenceCount": 2
+      },
+      {
+        "n": 4,
+        "title": "Resources needed for conformity determined",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "People, roles and skills needed per process are not determined.",
+        "evidenceCount": 3
+      },
+      {
+        "n": 5,
+        "title": "Processes controlled in accordance with the criteria",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "No CI job runs tests, lint or a build check before merge; no CODEOWNERS or PR template.",
+        "evidenceCount": 2
+      },
+      {
+        "n": 6,
+        "title": "Documented information for confidence that processes ran as planned",
+        "core": true,
+        "verdict": "Partial",
+        "gap": "Records exist in GitHub, but no retention period or owner is stated.",
+        "evidenceCount": 1
+      },
+      {
+        "n": 7,
+        "title": "Documented information demonstrating product/service conformity",
+        "core": true,
+        "verdict": "Gap",
+        "gap": "No retained test results, load-test results, release notes, CHANGELOG or acceptance sign-off.",
+        "evidenceCount": 0
+      },
+      {
+        "n": 8,
+        "title": "Planning outputs suitable for operations",
+        "core": false,
+        "verdict": "Partial",
+        "gap": "No process owners or measures; Phase 2 specs not updated for later features.",
+        "evidenceCount": 2
+      },
+      {
+        "n": 9,
+        "title": "Planned changes controlled",
+        "core": false,
+        "verdict": "Conform",
+        "gap": "",
+        "evidenceCount": 2
+      },
+      {
+        "n": 10,
+        "title": "Unintended changes reviewed; adverse effects mitigated",
+        "core": false,
+        "verdict": "Gap",
+        "gap": "No incident, hotfix or rollback procedure and no post-incident review.",
+        "evidenceCount": 1
+      },
+      {
+        "n": 11,
+        "title": "Outsourced processes identified (8.4 handoff only)",
+        "core": false,
+        "verdict": "Partial",
+        "gap": "Providers are mentioned across documents but not listed with controls.",
+        "evidenceCount": 2
+      }
+    ],
+    "actions": [
+      {
+        "priority": "P0",
+        "text": "Add a PR check workflow that builds the API, runs dotnet test, npm run lint and npm run build, and publishes test results.",
+        "closes": [
+          5,
+          7
+        ],
+        "artifact": ".github/workflows/ci.yml"
+      },
+      {
+        "priority": "P0",
+        "text": "Write a Definition of Done and a release checklist, including who accepts a production release and which record it produces.",
+        "closes": [
+          3,
+          7
+        ],
+        "artifact": "docs/process/definition-of-done.md"
+      },
+      {
+        "priority": "P0",
+        "text": "Document the incident, hotfix and rollback procedure and a post-incident review template.",
+        "closes": [
+          10
+        ],
+        "artifact": "docs/process/incident-and-rollback.md"
+      },
+      {
+        "priority": "P1",
+        "text": "Keep a CHANGELOG or GitHub release notes per production deploy.",
+        "closes": [
+          7,
+          9
+        ],
+        "artifact": "CHANGELOG.md"
+      },
+      {
+        "priority": "P1",
+        "text": "Add CODEOWNERS and a PR template, and enforce required reviews and checks.",
+        "closes": [
+          2,
+          5
+        ],
+        "artifact": ".github/CODEOWNERS"
+      },
+      {
+        "priority": "P1",
+        "text": "Update requirements for capabilities delivered after Phase 2, with acceptance links; record the WCAG decision.",
+        "closes": [
+          1,
+          3
+        ],
+        "artifact": "specs/phase2/REQUIREMENTS.md"
+      },
+      {
+        "priority": "P2",
+        "text": "Name process owners and roles, and state record retention.",
+        "closes": [
+          4,
+          6,
+          8
+        ],
+        "artifact": "docs/process/roles-and-records.md"
+      },
+      {
+        "priority": "P2",
+        "text": "Declare the delivery tracker and wiki as sources for the next audit.",
+        "closes": [
+          1,
+          6
+        ],
+        "artifact": ".xianix/operation-sources.yaml"
+      }
+    ],
+    "sources": [
+      {
+        "id": "codebase",
+        "provider": "git-repo",
+        "roles": [
+          "all"
+        ],
+        "verdict": "ok",
+        "artifacts": 31,
+        "note": "implicit fallback; delivery tracker (AIH-…) and wiki not declared"
+      }
+    ],
+    "notAssessed": [
+      "Delivery tracker (AIH-… ticket keys)",
+      "Wiki",
+      "GitHub repository settings (branch protection, environment reviewers)",
+      "Uncommitted change to frontend/package-lock.json"
+    ],
+    "detail": {
+      "status": "stored",
+      "provider": "github",
+      "repository": "99x-internal/ai-hub",
+      "branch": "compliance-audits",
+      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
+      "path": "audits/iso-9001-2015/20260921T110000Z--local-2026-09-21-ai-hub/8.1.md",
+      "url": "https://github.com/99x-internal/ai-hub/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-9001-2015/20260921T110000Z--local-2026-09-21-ai-hub/8.1.md",
+      "sha256": "d645efe6b5fa57669e3329c6e1e18e199f148cd7de19e8235b544775de027995"
+    }
+  }
+]

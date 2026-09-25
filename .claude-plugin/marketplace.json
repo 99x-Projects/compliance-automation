@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "ISO 9001:2015 compliance automation plugins for Xianix — clause-by-clause skills that assess, plan, and produce operational evidence.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -14,7 +14,7 @@
       "name": "operation",
       "source": "./plugins/operation",
       "description": "Automates ISO 9001:2015 Clause 8 Operation. Starts with 8.1 Operational planning and control using per-project sources (Jira, ClickUp, Confluence, git). Additional clause skills will be added per control.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "99x",
         "email": "xianix@99x.io"

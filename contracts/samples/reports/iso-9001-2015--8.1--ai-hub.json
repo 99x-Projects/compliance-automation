@@ -1,0 +1,902 @@
+{
+  "schema": "compliance-report.v1",
+  "standard": "ISO 9001:2015",
+  "standardKey": "iso-9001-2015",
+  "repository": "99x-internal/ai-hub",
+  "baseline": {
+    "ref": "development",
+    "commit": "e59aaa7"
+  },
+  "runAt": "2026-09-21T11:00:00Z",
+  "executionId": "local-2026-09-21-ai-hub",
+  "pluginVersion": "operation@0.1.0 (local run)",
+  "scope": {
+    "sourcesMode": "implicit-git-repo",
+    "gitScope": "full repository"
+  },
+  "sources": [
+    {
+      "id": "codebase",
+      "provider": "git-repo",
+      "roles": [
+        "all"
+      ],
+      "verdict": "ok",
+      "artifacts": 31,
+      "note": "implicit fallback; delivery tracker (AIH-…) and wiki not declared"
+    }
+  ],
+  "notAssessed": [
+    "Delivery tracker (AIH-… ticket keys)",
+    "Wiki",
+    "GitHub repository settings (branch protection, environment reviewers)",
+    "Uncommitted change to frontend/package-lock.json"
+  ],
+  "controls": [
+    {
+      "control": "8.1",
+      "controlTitle": "Operational planning and control",
+      "controlGroup": "8",
+      "overall": "Gap",
+      "summary": "99x AI Hub delivers a team-scoped AI observability console and API. Operational planning lives in the repository as phase specs with numbered requirements (`specs/phase2/REQUIREMENTS.md`), 17 dated ADRs (`docs/decisions/`), product and design briefs (`PRODUCT.md`, `DESIGN.md`) and contributor rules for people and agents (`AGENTS.md`, `.agents/skills/`). Deployment is well controlled: GitHub Actions build immutable images, apply migrations and deploy per environment, with production approval gates documented. The main gaps are on the conformity side. No automated build, test or lint gate runs before merge or deploy, there is no Definition of Done or release acceptance record, no test results or release notes are retained, and there is no written process for incidents, hotfixes or rollback. Because obligation 7 (records of product conformity) is a Gap, the overall 8.1 status is Gap.",
+      "obligations": [
+        {
+          "n": 1,
+          "title": "Product and service requirements determined",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/phase2/REQUIREMENTS.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/activity-metrics/API-CONTRACTS.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "PRODUCT.md"
+            }
+          ],
+          "gap": "Later capabilities (tenants, webhook mapping, regatta) are recorded only as ADRs or code, not as requirements. Requirements aren't linked to acceptance. Standards commitments are undecided."
+        },
+        {
+          "n": 2,
+          "title": "Criteria for processes established",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "AGENTS.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "api/README.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".agents/skills/branch-code-review/SKILL.md"
+            }
+          ],
+          "gap": "No end-to-end delivery process with entry conditions, roles or measures."
+        },
+        {
+          "n": 3,
+          "title": "Criteria for acceptance of products and services established",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/phase2/README.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/phase2/REQUIREMENTS.md:301"
+            }
+          ],
+          "gap": "No Definition of Done or release acceptance criteria; no named acceptor."
+        },
+        {
+          "n": 4,
+          "title": "Resources needed for conformity determined",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "api/README.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "docs/local-development.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/TECH_CHOICES.md"
+            }
+          ],
+          "gap": "People, roles and skills needed per process are not determined."
+        },
+        {
+          "n": 5,
+          "title": "Processes controlled in accordance with the criteria",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/deploy-api.yml"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/deploy-frontend.yml"
+            }
+          ],
+          "gap": "No CI job runs tests, lint or a build check before merge; no CODEOWNERS or PR template."
+        },
+        {
+          "n": 6,
+          "title": "Documented information for confidence that processes ran as planned",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "command",
+              "sourceId": "codebase",
+              "locator": "git log --merges (PR #250–#253)"
+            }
+          ],
+          "gap": "Records exist in GitHub, but no retention period or owner is stated."
+        },
+        {
+          "n": 7,
+          "title": "Documented information demonstrating product/service conformity",
+          "core": true,
+          "verdict": "Gap",
+          "evidence": [],
+          "gap": "No retained test results, load-test results, release notes, CHANGELOG or acceptance sign-off."
+        },
+        {
+          "n": 8,
+          "title": "Planning outputs suitable for operations",
+          "core": false,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/phase2/SCOPING.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "docs/decisions/"
+            }
+          ],
+          "gap": "No process owners or measures; Phase 2 specs not updated for later features."
+        },
+        {
+          "n": 9,
+          "title": "Planned changes controlled",
+          "core": false,
+          "verdict": "Conform",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "docs/decisions/ (17 ADRs)"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/deploy-api.yml"
+            }
+          ],
+          "gap": ""
+        },
+        {
+          "n": 10,
+          "title": "Unintended changes reviewed; adverse effects mitigated",
+          "core": false,
+          "verdict": "Gap",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "api/README.md:196"
+            }
+          ],
+          "gap": "No incident, hotfix or rollback procedure and no post-incident review."
+        },
+        {
+          "n": 11,
+          "title": "Outsourced processes identified (8.4 handoff only)",
+          "core": false,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "specs/TECH_CHOICES.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "api/README.md"
+            }
+          ],
+          "gap": "Providers are mentioned across documents but not listed with controls."
+        }
+      ],
+      "actions": [
+        {
+          "priority": "P0",
+          "text": "Add a PR check workflow that builds the API, runs dotnet test, npm run lint and npm run build, and publishes test results.",
+          "closes": [
+            5,
+            7
+          ],
+          "artifact": ".github/workflows/ci.yml"
+        },
+        {
+          "priority": "P0",
+          "text": "Write a Definition of Done and a release checklist, including who accepts a production release and which record it produces.",
+          "closes": [
+            3,
+            7
+          ],
+          "artifact": "docs/process/definition-of-done.md"
+        },
+        {
+          "priority": "P0",
+          "text": "Document the incident, hotfix and rollback procedure and a post-incident review template.",
+          "closes": [
+            10
+          ],
+          "artifact": "docs/process/incident-and-rollback.md"
+        },
+        {
+          "priority": "P1",
+          "text": "Keep a CHANGELOG or GitHub release notes per production deploy.",
+          "closes": [
+            7,
+            9
+          ],
+          "artifact": "CHANGELOG.md"
+        },
+        {
+          "priority": "P1",
+          "text": "Add CODEOWNERS and a PR template, and enforce required reviews and checks.",
+          "closes": [
+            2,
+            5
+          ],
+          "artifact": ".github/CODEOWNERS"
+        },
+        {
+          "priority": "P1",
+          "text": "Update requirements for capabilities delivered after Phase 2, with acceptance links; record the WCAG decision.",
+          "closes": [
+            1,
+            3
+          ],
+          "artifact": "specs/phase2/REQUIREMENTS.md"
+        },
+        {
+          "priority": "P2",
+          "text": "Name process owners and roles, and state record retention.",
+          "closes": [
+            4,
+            6,
+            8
+          ],
+          "artifact": "docs/process/roles-and-records.md"
+        },
+        {
+          "priority": "P2",
+          "text": "Declare the delivery tracker and wiki as sources for the next audit.",
+          "closes": [
+            1,
+            6
+          ],
+          "artifact": ".xianix/operation-sources.yaml"
+        }
+      ],
+      "sections": [
+        {
+          "id": "product-and-service-requirements",
+          "title": "Product and service requirements",
+          "kind": "text",
+          "text": "Requirements are determined per delivery phase as numbered statements, with API contracts and data models alongside. Product purpose, users, constraints and terminology are captured in PRODUCT.md. Capabilities added after Phase 2 (Hub tenants and roles, webhook payload mapping and filters, regatta) are defined through ADRs and code, but have no requirement entries."
+        },
+        {
+          "id": "product-and-service-requirements-2",
+          "title": "Product and service requirements",
+          "kind": "table",
+          "columns": [
+            "Product / service",
+            "Requirement source (locator)",
+            "Type (customer / statutory / internal)",
+            "Linked acceptance",
+            "Status"
+          ],
+          "rows": [
+            [
+              "AI Hub console — teams, roles, workflows",
+              "specs/phase2/REQUIREMENTS.md (REQ-ID, REQ-TEAM, REQ-WF)",
+              "internal",
+              "specs/phase2/README.md goal table (phase level)",
+              "determined"
+            ],
+            [
+              "AI Hub API — activity-event ingest",
+              "specs/activity-metrics/API-CONTRACTS.md, docs/decisions/0013-event-belongs-to-node-activity.md",
+              "internal",
+              "not linked",
+              "determined"
+            ],
+            [
+              "Hub tenants and tenant roles",
+              "docs/decisions/0015-tenants-and-tenant-roles.md",
+              "internal",
+              "not linked",
+              "implicit"
+            ],
+            [
+              "Webhook payload mapping and filters",
+              "docs/decisions/0015-webhook-payload-field-mapping.md, docs/decisions/0016-webhook-payload-filter-conditions.md",
+              "internal",
+              "unit tests api/tests/AIHub.Domain.Tests/WebhookPayloadMapperTests.cs, WebhookFilterTests.cs",
+              "implicit"
+            ],
+            [
+              "Regatta (leaderboard)",
+              "code only (api/src/AIHub.Api/Controllers/LeaderboardController.cs)",
+              "internal",
+              "not linked",
+              "missing"
+            ],
+            [
+              "Accessibility",
+              "PRODUCT.md (\"WCAG 2.1 AA … undecided\")",
+              "customer / statutory (undecided)",
+              "not found",
+              "missing"
+            ],
+            [
+              "Performance",
+              "specs/phase2/REQUIREMENTS.md:301 (workflow detail p95 ≤ 2 s)",
+              "internal",
+              "load-testing/ (ingest only; no retained results)",
+              "determined"
+            ]
+          ]
+        },
+        {
+          "id": "process-criteria",
+          "title": "Process criteria",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Owner",
+            "Entry conditions",
+            "Sequence / method",
+            "Measures / gates",
+            "Output",
+            "Criteria status"
+          ],
+          "rows": [
+            [
+              "Requirements and scoping",
+              "not named",
+              "not stated",
+              "Phase specs and scoping (specs/phase2/SCOPING.md)",
+              "Phase success criteria",
+              "Specs",
+              "Partial"
+            ],
+            [
+              "Design decisions",
+              "not named",
+              "not stated",
+              "ADR template: Status, Date, Context, Decision, Consequences (docs/decisions/)",
+              "none",
+              "ADR",
+              "Partial"
+            ],
+            [
+              "Development",
+              "not named",
+              "Branch naming type/kebab-case (AGENTS.md)",
+              "Conventional commits with Gitmoji; coding conventions (AGENTS.md, docs/conventions/enums.md)",
+              "none enforced",
+              "Branch + PR",
+              "Partial"
+            ],
+            [
+              "Code review and merge",
+              "not named",
+              "PR to development (merge history)",
+              "Optional agent skills (.agents/skills/branch-code-review, dotnet-production-review, nextjs-production-review)",
+              "none enforced (no CODEOWNERS, no required checks in repo)",
+              "Merged PR",
+              "Partial"
+            ],
+            [
+              "Build and deploy — API",
+              "not named",
+              "Push to development / production, or manual dispatch",
+              "Validate env → OIDC login → build image → push :<sha12> + :latest → migrate → restart (deploy-api.yml)",
+              "Environment-variable validation; production reviewers (documented)",
+              "Running API",
+              "Conform"
+            ],
+            [
+              "Build and deploy — frontend",
+              "not named",
+              "Same triggers",
+              "npm ci → build static export → upload to storage → purge Front Door on production (deploy-frontend.yml)",
+              "Environment-variable validation",
+              "Static site",
+              "Conform"
+            ],
+            [
+              "Database change",
+              "not named",
+              "Migration in PR",
+              "dotnet ef database update in the pipeline, with a temporary runner firewall rule (deploy-api.yml)",
+              "none",
+              "Updated schema",
+              "Partial"
+            ],
+            [
+              "Load / performance verification",
+              "not named",
+              "Manual",
+              "k6 seed and run (load-testing/README.md)",
+              "not stated",
+              "Console output only",
+              "Partial"
+            ],
+            [
+              "Operations and monitoring",
+              "not named",
+              "not stated",
+              "Optional Application Insights (api/README.md §4)",
+              "none",
+              "not found",
+              "Gap"
+            ],
+            [
+              "Incident handling and rollback",
+              "not named",
+              "not stated",
+              "not found",
+              "none",
+              "not found",
+              "Gap"
+            ]
+          ]
+        },
+        {
+          "id": "acceptance-criteria",
+          "title": "Acceptance criteria",
+          "kind": "table",
+          "columns": [
+            "Output (product / service)",
+            "Acceptance criterion",
+            "Who accepts",
+            "Record produced",
+            "Linked requirement",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Phase 2.0 console + API",
+              "Goal / success-criterion table (specs/phase2/README.md)",
+              "not named",
+              "not found",
+              "Phase 2 goals",
+              "Partial"
+            ],
+            [
+              "Workflow detail performance",
+              "p95 ≤ 2 s for 20 nodes (specs/phase2/REQUIREMENTS.md:301)",
+              "not named",
+              "not found",
+              "NFR",
+              "Partial"
+            ],
+            [
+              "Webhook mapping and filter logic",
+              "Unit tests pass (api/tests/AIHub.Domain.Tests/)",
+              "not named",
+              "not retained (no CI test job)",
+              "ADR 0015 / 0016",
+              "Partial"
+            ],
+            [
+              "Production release",
+              "Required reviewers on the production environment (api/README.md, frontend/README.md:169)",
+              "GitHub Environment reviewers (not named)",
+              "GitHub deployment approval (not retained in repo)",
+              "not linked",
+              "Partial"
+            ],
+            [
+              "Any release",
+              "Definition of Done",
+              "not found",
+              "not found",
+              "not found",
+              "Gap"
+            ]
+          ]
+        },
+        {
+          "id": "resources-needed-for-conformity",
+          "title": "Resources needed for conformity",
+          "kind": "table",
+          "columns": [
+            "Resource",
+            "Kind (people / skill / tool / environment / information)",
+            "Process it supports",
+            "Evidence",
+            "Determined?"
+          ],
+          "rows": [
+            [
+              "Azure App Service, ACR, Storage static website, Front Door, PostgreSQL Flexible Server, Key Vault",
+              "environment",
+              "Build and deploy, operations",
+              "api/README.md, frontend/README.md, deploy-*.yml",
+              "yes"
+            ],
+            [
+              "Microsoft Entra ID app registration",
+              "environment / information",
+              "Authentication",
+              "docs/local-development.md §2",
+              "yes"
+            ],
+            [
+              "GitHub Actions + development / production Environments, OIDC secrets",
+              "tool",
+              "Build and deploy",
+              "api/README.md §5",
+              "yes"
+            ],
+            [
+              ".NET 10 SDK, Node 22, Docker, EF Core tools, k6",
+              "tool",
+              "Development, deploy, load testing",
+              "api/global.json, deploy-*.yml, load-testing/README.md",
+              "yes"
+            ],
+            [
+              "Application Insights",
+              "tool",
+              "Operations and monitoring",
+              "api/README.md §4 (\"optional\")",
+              "partial"
+            ],
+            [
+              "Developer, reviewer, release approver, on-call roles and skills",
+              "people / skill",
+              "All processes",
+              "not found",
+              "no"
+            ]
+          ]
+        },
+        {
+          "id": "process-control-map",
+          "title": "Process control map",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Criterion",
+            "Control that enforces it",
+            "Evidence (locator)",
+            "Verdict"
+          ],
+          "rows": [
+            [
+              "Build and deploy — API",
+              "Required configuration present before deploy",
+              "Pipeline step \"Validate environment variables\"",
+              ".github/workflows/deploy-api.yml",
+              "Conform"
+            ],
+            [
+              "Build and deploy — API",
+              "Every deploy is traceable and reversible",
+              "Immutable :<sha12> image tag pushed with :latest",
+              ".github/workflows/deploy-api.yml, api/README.md:196",
+              "Conform"
+            ],
+            [
+              "Build and deploy",
+              "Production changes approved",
+              "GitHub Environment required reviewers",
+              "documented in api/README.md, frontend/README.md:169; setting not verifiable in repo",
+              "Partial"
+            ],
+            [
+              "Database change",
+              "Schema matches the released code",
+              "EF migrations applied in the pipeline before restart",
+              ".github/workflows/deploy-api.yml",
+              "Conform"
+            ],
+            [
+              "Code review and merge",
+              "Changes reviewed before merge",
+              "none in repo (no CODEOWNERS, PR template or required checks)",
+              "merge commits only",
+              "Partial"
+            ],
+            [
+              "Development",
+              "Tests and lint pass before merge or deploy",
+              "none (no CI test or lint job)",
+              "not found",
+              "Gap"
+            ],
+            [
+              "Development",
+              "Commit and branch conventions",
+              "convention only (AGENTS.md)",
+              "not found (no commit lint)",
+              "Partial"
+            ],
+            [
+              "Load / performance verification",
+              "NFR p95 ≤ 2 s met",
+              "manual k6 run",
+              "load-testing/",
+              "Partial"
+            ]
+          ]
+        },
+        {
+          "id": "documented-information-inventory-maintain",
+          "title": "Documented information inventory — Maintain",
+          "kind": "table",
+          "columns": [
+            "Title",
+            "Purpose",
+            "Location",
+            "Owner",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Phase 2 requirements, scoping, contracts, data model",
+              "Requirements and planning",
+              "specs/phase2/*.md",
+              "not named",
+              "present (not updated since Phase 2)"
+            ],
+            [
+              "Activity-metrics specs",
+              "Requirements and contracts",
+              "specs/activity-metrics/*.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Architecture decision records",
+              "Planned changes, criteria",
+              "docs/decisions/*.md (17)",
+              "not named",
+              "present"
+            ],
+            [
+              "Product and design briefs",
+              "Requirements, constraints",
+              "PRODUCT.md, DESIGN.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Contributor and agent conventions",
+              "Process criteria",
+              "AGENTS.md, .agents/skills/*, docs/conventions/enums.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Deploy and local-dev guides",
+              "Resources, process method",
+              "api/README.md, frontend/README.md, docs/local-development.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Definition of Done / release checklist",
+              "Acceptance criteria",
+              "not found",
+              "—",
+              "missing"
+            ],
+            [
+              "Incident, hotfix and rollback procedure",
+              "Unintended changes",
+              "not found",
+              "—",
+              "missing"
+            ]
+          ]
+        },
+        {
+          "id": "documented-information-inventory-retain",
+          "title": "Documented information inventory — Retain",
+          "kind": "table",
+          "columns": [
+            "Record",
+            "Demonstrates (process planned / conformity)",
+            "Location",
+            "Retention (if stated)",
+            "Status"
+          ],
+          "rows": [
+            [
+              "PR merge commits",
+              "process planned",
+              "git history (e.g. PR #250–#253)",
+              "not stated",
+              "present"
+            ],
+            [
+              "Deploy workflow runs",
+              "process planned",
+              "GitHub Actions (outside repo)",
+              "not stated",
+              "present (not retained in repo)"
+            ],
+            [
+              "Test results",
+              "conformity",
+              "not found",
+              "—",
+              "missing"
+            ],
+            [
+              "Load-test results",
+              "conformity",
+              "not found (targets.json and output are gitignored)",
+              "—",
+              "missing"
+            ],
+            [
+              "Release notes / CHANGELOG",
+              "conformity",
+              "not found",
+              "—",
+              "missing"
+            ],
+            [
+              "Production approval records",
+              "process planned",
+              "GitHub Environments (outside repo)",
+              "not stated",
+              "not verifiable"
+            ]
+          ]
+        },
+        {
+          "id": "change-control-planned-changes",
+          "title": "Change control — Planned changes",
+          "kind": "text",
+          "text": "Planned changes are controlled through ADRs with status and date (docs/decisions/0001-phase2-workflow-scope.md … 0016-webhook-payload-filter-conditions.md), PR-based merges into development, and environment-scoped deploy pipelines. Production reviewers are documented in api/README.md §5 and frontend/README.md:169. Images are tagged immutably per commit. There are no release notes or version numbers per release."
+        },
+        {
+          "id": "change-control-unintended-changes",
+          "title": "Change control — Unintended changes",
+          "kind": "text",
+          "text": "not found as a process. Evidence shows ad-hoc reverts (e9fe4a8 revert(frontend): restore TypeScript target to es5, eab07f4 Revert \"fix: Display correct Last Updated At timestamp…\") and a rollback path implied by immutable image tags (api/README.md:167,196). There is no documented incident intake, severity, rollback steps, post-incident review or corrective-action tracking. specs/REQUIREMENTS.md:52 lists \"incident response and runbooks\" and \"postmortems\" as future scope."
+        },
+        {
+          "id": "outsourced-processes-8-4-handoff",
+          "title": "Outsourced processes (8.4 handoff)",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Provider (if known)",
+            "Current control (if any)",
+            "Residual 8.4 work"
+          ],
+          "rows": [
+            [
+              "Hosting — API, static site, CDN",
+              "Microsoft Azure (App Service, Storage, Front Door)",
+              "Infrastructure described in api/README.md, frontend/README.md",
+              "Supplier criteria, service levels, monitoring"
+            ],
+            [
+              "Database",
+              "Azure Database for PostgreSQL Flexible Server",
+              "Pipeline firewall rule; Key Vault connection string",
+              "Backup and restore evidence, service levels"
+            ],
+            [
+              "Secrets management",
+              "Azure Key Vault",
+              "Used by the pipeline and the app (api/README.md)",
+              "Access review evidence"
+            ],
+            [
+              "Identity",
+              "Microsoft Entra ID; Microsoft Graph (user lookups, IMicrosoftGraphService)",
+              "App registration steps (docs/local-development.md)",
+              "Supplier control, consent and permission review"
+            ],
+            [
+              "Source control and CI/CD",
+              "GitHub, GitHub Actions",
+              "Workflows, OIDC, Environments",
+              "Supplier control; runner security"
+            ],
+            [
+              "Telemetry",
+              "Azure Application Insights",
+              "Optional configuration",
+              "Data residency and retention"
+            ],
+            [
+              "Third-party libraries",
+              "npm, NuGet ecosystems",
+              "Mostly pinned versions in frontend/package.json (some caret ranges, e.g. next, motion)",
+              "Dependency and licence review (no LICENSE/NOTICE found)"
+            ],
+            [
+              "Agent-produced activity events",
+              "External agents via ingest (e.g. Xianix)",
+              "Team API keys, PATs, webhook secrets",
+              "Supplier and interface control for agent data"
+            ]
+          ]
+        }
+      ],
+      "reportMd": "## ISO 9001:2015 — 8.1 Operational planning and control\n\n**Standard / control:** ISO 9001:2015, 8.1 Operational planning and control\n**Repository:** `99x-Internal/ai-hub` (local clone)\n**Baseline:** `development` @ `e59aaa7` (working tree has one uncommitted change to `frontend/package-lock.json`; not assessed)\n**Sources file:** `implicit git-repo` (no `.xianix/operation-sources.yaml`, `compliance/operation-sources.yaml` or `--sources` found)\n**Git scope:** `full repository`\n**Products / services in scope:** 99x AI Hub web console (Next.js static export); AI Hub API (.NET 10 — REST + activity-event ingest); signed-out landing page\n**Processes in scope:** Requirements and scoping; Design decisions (ADRs); Development; Code review and merge; Build and deploy (API, frontend); Database change (EF migrations); Load / performance verification; Operations and monitoring; Incident handling and rollback\n**Report date:** `2026-09-21`\n**Overall 8.1 status:** `Gap`\n\n---\n\n### Sources used\n\n| Id | Provider | Roles | Verdict | Artifacts | Notes |\n|---|---|---|---|---|---|\n| codebase | git-repo | all (implicit fallback) | ok | 31 | Delivery tracker (commit messages reference `AIH-…` ticket keys) and any wiki are not declared, so they were not fetched. |\n\n---\n\n### Summary\n\n99x AI Hub delivers a team-scoped AI observability console and API. Operational planning lives in the repository as phase specs with numbered requirements (`specs/phase2/REQUIREMENTS.md`), 17 dated ADRs (`docs/decisions/`), product and design briefs (`PRODUCT.md`, `DESIGN.md`) and contributor rules for people and agents (`AGENTS.md`, `.agents/skills/`). Deployment is well controlled: GitHub Actions build immutable images, apply migrations and deploy per environment, with production approval gates documented. The main gaps are on the conformity side. No automated build, test or lint gate runs before merge or deploy, there is no Definition of Done or release acceptance record, no test results or release notes are retained, and there is no written process for incidents, hotfixes or rollback. Because obligation 7 (records of product conformity) is a Gap, the overall 8.1 status is Gap.\n\n---\n\n### Obligation scores\n\n| # | Obligation | Verdict | Evidence (path or `not found`) | Gap to close |\n|---|---|---|---|---|\n| 1 | Product and service requirements determined | Partial | `specs/phase2/REQUIREMENTS.md` (REQ-ID-*, REQ-TEAM-*, REQ-WF-*), `specs/activity-metrics/API-CONTRACTS.md`, `PRODUCT.md` | Later capabilities (tenants, webhook mapping, regatta) are recorded only as ADRs or code, not as requirements. Requirements aren't linked to acceptance. Standards commitments are undecided (`PRODUCT.md`: WCAG 2.1 AA \"undecided\"). |\n| 2 | Criteria for processes established | Partial | `AGENTS.md` (commit, branch and code conventions), `api/README.md` §5 (deploy order), `.agents/skills/branch-code-review/SKILL.md` | No end-to-end delivery process with entry conditions, roles or measures. Code review criteria exist only as an optional agent skill. |\n| 3 | Criteria for acceptance of products and services established | Partial | `specs/phase2/README.md` (goal / success-criterion tables), `specs/phase2/REQUIREMENTS.md:301` (p95 ≤ 2 s NFR) | No Definition of Done or release acceptance criteria. No named acceptor. Success criteria exist per phase, not per release. |\n| 4 | Resources needed for conformity determined | Partial | `api/README.md` (Azure resources, Key Vault secrets, GitHub Environments), `docs/local-development.md`, `specs/TECH_CHOICES.md`, `load-testing/README.md` | Tools and environments are well described. People, roles and skills needed per process are not. |\n| 5 | Processes controlled in accordance with the criteria | Partial | `.github/workflows/deploy-api.yml`, `.github/workflows/deploy-frontend.yml` (environment validation, OIDC, migrations, immutable `:<sha12>` tags); PR merge history (`git log --merges`) | No CI job runs `dotnet test`, `npm run lint` or a build check before merge. No CODEOWNERS or PR template. Conventional commits and review depend on convention. |\n| 6 | Documented information for confidence that processes ran as planned | Partial | GitHub Actions run history and PR merge commits (e.g. `55f210e` PR #252); ADR status and date blocks | Records exist in GitHub, but no retention period or owner is stated, and deploy approvals aren't evidenced in the repository. |\n| 7 | Documented information demonstrating product/service conformity | Gap | not found | No retained test results, load-test results, release notes, CHANGELOG or acceptance sign-off for any release. |\n| 8 | Planning outputs suitable for operations | Partial | `specs/phase2/SCOPING.md` (prioritised delivery), `docs/decisions/*.md`, `AGENTS.md` | Usable by developers, but no process owners and no measures. Phase 2 specs haven't been updated for features delivered since. |\n| 9 | Planned changes controlled | Conform | `docs/decisions/0001…0016` (17 ADRs with status and date), PR-based merges, `deploy-*.yml` (per-environment deploys, production reviewers per `api/README.md`, `frontend/README.md:169`) | Optional: add release notes so planned changes are visible per release. |\n| 10 | Unintended changes reviewed; adverse effects mitigated | Gap | not found (only `api/README.md:167,196` mentions `:<sha12>` tags for rollbacks; ad-hoc reverts such as `e9fe4a8`, `eab07f4`) | No incident, hotfix or rollback procedure and no post-incident review. `specs/REQUIREMENTS.md:52` lists incident response and runbooks as future scope. |\n| 11 | Outsourced processes identified (8.4 handoff only) | Partial | `specs/TECH_CHOICES.md`, `api/README.md`, `.github/workflows/*` | Providers are mentioned across documents, but there's no single list with controls. See the 8.4 handoff. |\n\n---\n\n### Product and service requirements\n\nRequirements are determined per delivery phase as numbered statements, with API contracts and data models alongside. Product purpose, users, constraints and terminology are captured in `PRODUCT.md`. Capabilities added after Phase 2 (Hub tenants and roles, webhook payload mapping and filters, regatta) are defined through ADRs and code, but have no requirement entries.\n\n| Product / service | Requirement source (locator) | Type (customer / statutory / internal) | Linked acceptance | Status |\n|---|---|---|---|---|\n| AI Hub console — teams, roles, workflows | `specs/phase2/REQUIREMENTS.md` (REQ-ID, REQ-TEAM, REQ-WF) | internal | `specs/phase2/README.md` goal table (phase level) | determined |\n| AI Hub API — activity-event ingest | `specs/activity-metrics/API-CONTRACTS.md`, `docs/decisions/0013-event-belongs-to-node-activity.md` | internal | not linked | determined |\n| Hub tenants and tenant roles | `docs/decisions/0015-tenants-and-tenant-roles.md` | internal | not linked | implicit |\n| Webhook payload mapping and filters | `docs/decisions/0015-webhook-payload-field-mapping.md`, `docs/decisions/0016-webhook-payload-filter-conditions.md` | internal | unit tests `api/tests/AIHub.Domain.Tests/WebhookPayloadMapperTests.cs`, `WebhookFilterTests.cs` | implicit |\n| Regatta (leaderboard) | code only (`api/src/AIHub.Api/Controllers/LeaderboardController.cs`) | internal | not linked | missing |\n| Accessibility | `PRODUCT.md` (\"WCAG 2.1 AA … undecided\") | customer / statutory (undecided) | not found | missing |\n| Performance | `specs/phase2/REQUIREMENTS.md:301` (workflow detail p95 ≤ 2 s) | internal | `load-testing/` (ingest only; no retained results) | determined |\n\n---\n\n### Process criteria\n\n| Process | Owner | Entry conditions | Sequence / method | Measures / gates | Output | Criteria status |\n|---|---|---|---|---|---|---|\n| Requirements and scoping | not named | not stated | Phase specs and scoping (`specs/phase2/SCOPING.md`) | Phase success criteria | Specs | Partial |\n| Design decisions | not named | not stated | ADR template: Status, Date, Context, Decision, Consequences (`docs/decisions/`) | none | ADR | Partial |\n| Development | not named | Branch naming `type/kebab-case` (`AGENTS.md`) | Conventional commits with Gitmoji; coding conventions (`AGENTS.md`, `docs/conventions/enums.md`) | none enforced | Branch + PR | Partial |\n| Code review and merge | not named | PR to `development` (merge history) | Optional agent skills (`.agents/skills/branch-code-review`, `dotnet-production-review`, `nextjs-production-review`) | none enforced (no CODEOWNERS, no required checks in repo) | Merged PR | Partial |\n| Build and deploy — API | not named | Push to `development` / `production`, or manual dispatch | Validate env → OIDC login → build image → push `:<sha12>` + `:latest` → migrate → restart (`deploy-api.yml`) | Environment-variable validation; production reviewers (documented) | Running API | Conform |\n| Build and deploy — frontend | not named | Same triggers | `npm ci` → build static export → upload to storage → purge Front Door on production (`deploy-frontend.yml`) | Environment-variable validation | Static site | Conform |\n| Database change | not named | Migration in PR | `dotnet ef database update` in the pipeline, with a temporary runner firewall rule (`deploy-api.yml`) | none | Updated schema | Partial |\n| Load / performance verification | not named | Manual | k6 seed and run (`load-testing/README.md`) | not stated | Console output only | Partial |\n| Operations and monitoring | not named | not stated | Optional Application Insights (`api/README.md` §4) | none | not found | Gap |\n| Incident handling and rollback | not named | not stated | not found | none | not found | Gap |\n\n---\n\n### Acceptance criteria\n\n| Output (product / service) | Acceptance criterion | Who accepts | Record produced | Linked requirement | Status |\n|---|---|---|---|---|---|\n| Phase 2.0 console + API | Goal / success-criterion table (`specs/phase2/README.md`) | not named | not found | Phase 2 goals | Partial |\n| Workflow detail performance | p95 ≤ 2 s for 20 nodes (`specs/phase2/REQUIREMENTS.md:301`) | not named | not found | NFR | Partial |\n| Webhook mapping and filter logic | Unit tests pass (`api/tests/AIHub.Domain.Tests/`) | not named | not retained (no CI test job) | ADR 0015 / 0016 | Partial |\n| Production release | Required reviewers on the production environment (`api/README.md`, `frontend/README.md:169`) | GitHub Environment reviewers (not named) | GitHub deployment approval (not retained in repo) | not linked | Partial |\n| Any release | Definition of Done | not found | not found | not found | Gap |\n\n---\n\n### Resources needed for conformity\n\n| Resource | Kind (people / skill / tool / environment / information) | Process it supports | Evidence | Determined? |\n|---|---|---|---|---|\n| Azure App Service, ACR, Storage static website, Front Door, PostgreSQL Flexible Server, Key Vault | environment | Build and deploy, operations | `api/README.md`, `frontend/README.md`, `deploy-*.yml` | yes |\n| Microsoft Entra ID app registration | environment / information | Authentication | `docs/local-development.md` §2 | yes |\n| GitHub Actions + `development` / `production` Environments, OIDC secrets | tool | Build and deploy | `api/README.md` §5 | yes |\n| .NET 10 SDK, Node 22, Docker, EF Core tools, k6 | tool | Development, deploy, load testing | `api/global.json`, `deploy-*.yml`, `load-testing/README.md` | yes |\n| Application Insights | tool | Operations and monitoring | `api/README.md` §4 (\"optional\") | partial |\n| Developer, reviewer, release approver, on-call roles and skills | people / skill | All processes | not found | no |\n\n---\n\n### Process control map\n\n| Process | Criterion | Control that enforces it | Evidence (locator) | Verdict |\n|---|---|---|---|---|\n| Build and deploy — API | Required configuration present before deploy | Pipeline step \"Validate environment variables\" | `.github/workflows/deploy-api.yml` | Conform |\n| Build and deploy — API | Every deploy is traceable and reversible | Immutable `:<sha12>` image tag pushed with `:latest` | `.github/workflows/deploy-api.yml`, `api/README.md:196` | Conform |\n| Build and deploy | Production changes approved | GitHub Environment required reviewers | documented in `api/README.md`, `frontend/README.md:169`; setting not verifiable in repo | Partial |\n| Database change | Schema matches the released code | EF migrations applied in the pipeline before restart | `.github/workflows/deploy-api.yml` | Conform |\n| Code review and merge | Changes reviewed before merge | none in repo (no CODEOWNERS, PR template or required checks) | merge commits only | Partial |\n| Development | Tests and lint pass before merge or deploy | none (no CI test or lint job) | not found | Gap |\n| Development | Commit and branch conventions | convention only (`AGENTS.md`) | not found (no commit lint) | Partial |\n| Load / performance verification | NFR p95 ≤ 2 s met | manual k6 run | `load-testing/` | Partial |\n\n---\n\n### Documented information inventory\n\n**Maintain** (current definitions, criteria, plans):\n\n| Title | Purpose | Location | Owner | Status |\n|---|---|---|---|---|\n| Phase 2 requirements, scoping, contracts, data model | Requirements and planning | `specs/phase2/*.md` | not named | present (not updated since Phase 2) |\n| Activity-metrics specs | Requirements and contracts | `specs/activity-metrics/*.md` | not named | present |\n| Architecture decision records | Planned changes, criteria | `docs/decisions/*.md` (17) | not named | present |\n| Product and design briefs | Requirements, constraints | `PRODUCT.md`, `DESIGN.md` | not named | present |\n| Contributor and agent conventions | Process criteria | `AGENTS.md`, `.agents/skills/*`, `docs/conventions/enums.md` | not named | present |\n| Deploy and local-dev guides | Resources, process method | `api/README.md`, `frontend/README.md`, `docs/local-development.md` | not named | present |\n| Definition of Done / release checklist | Acceptance criteria | not found | — | missing |\n| Incident, hotfix and rollback procedure | Unintended changes | not found | — | missing |\n\n**Retain** (records that a process ran as planned, and that output conformed):\n\n| Record | Demonstrates (process planned / conformity) | Location | Retention (if stated) | Status |\n|---|---|---|---|---|\n| PR merge commits | process planned | git history (e.g. PR #250–#253) | not stated | present |\n| Deploy workflow runs | process planned | GitHub Actions (outside repo) | not stated | present (not retained in repo) |\n| Test results | conformity | not found | — | missing |\n| Load-test results | conformity | not found (`targets.json` and output are gitignored) | — | missing |\n| Release notes / CHANGELOG | conformity | not found | — | missing |\n| Production approval records | process planned | GitHub Environments (outside repo) | not stated | not verifiable |\n\n---\n\n### Change control\n\n**Planned changes**\n\nPlanned changes are controlled through ADRs with status and date (`docs/decisions/0001-phase2-workflow-scope.md` … `0016-webhook-payload-filter-conditions.md`), PR-based merges into `development`, and environment-scoped deploy pipelines. Production reviewers are documented in `api/README.md` §5 and `frontend/README.md:169`. Images are tagged immutably per commit. There are no release notes or version numbers per release.\n\n**Unintended changes**\n\n`not found` as a process. Evidence shows ad-hoc reverts (`e9fe4a8 revert(frontend): restore TypeScript target to es5`, `eab07f4 Revert \"fix: Display correct Last Updated At timestamp…\"`) and a rollback path implied by immutable image tags (`api/README.md:167,196`). There is no documented incident intake, severity, rollback steps, post-incident review or corrective-action tracking. `specs/REQUIREMENTS.md:52` lists \"incident response and runbooks\" and \"postmortems\" as future scope.\n\n---\n\n### Outsourced processes (8.4 handoff)\n\n> Not assessed under 8.4 in this report. Listed so a future 8.4 skill can take over.\n\n| Process | Provider (if known) | Current control (if any) | Residual 8.4 work |\n|---|---|---|---|\n| Hosting — API, static site, CDN | Microsoft Azure (App Service, Storage, Front Door) | Infrastructure described in `api/README.md`, `frontend/README.md` | Supplier criteria, service levels, monitoring |\n| Database | Azure Database for PostgreSQL Flexible Server | Pipeline firewall rule; Key Vault connection string | Backup and restore evidence, service levels |\n| Secrets management | Azure Key Vault | Used by the pipeline and the app (`api/README.md`) | Access review evidence |\n| Identity | Microsoft Entra ID; Microsoft Graph (user lookups, `IMicrosoftGraphService`) | App registration steps (`docs/local-development.md`) | Supplier control, consent and permission review |\n| Source control and CI/CD | GitHub, GitHub Actions | Workflows, OIDC, Environments | Supplier control; runner security |\n| Telemetry | Azure Application Insights | Optional configuration | Data residency and retention |\n| Third-party libraries | npm, NuGet ecosystems | Mostly pinned versions in `frontend/package.json` (some caret ranges, e.g. `next`, `motion`) | Dependency and licence review (no `LICENSE`/`NOTICE` found) |\n| Agent-produced activity events | External agents via ingest (e.g. Xianix) | Team API keys, PATs, webhook secrets | Supplier and interface control for agent data |\n\n---\n\n### Recommended actions\n\nOrdered by 8.1 impact. Each action closes a named gap in the obligation table.\n\n| Priority | Action | Closes obligation # | Suggested artifact |\n|---|---|---|---|\n| P0 | Add a PR check workflow that builds the API, runs `dotnet test`, and runs `npm run lint` and `npm run build`, and publish test results as workflow artifacts. | 5, 7 | `.github/workflows/ci.yml` |\n| P0 | Write a Definition of Done and a release checklist, including who accepts a production release and which record it produces. | 3, 7 | `docs/process/definition-of-done.md` |\n| P0 | Document the incident, hotfix and rollback procedure (roll back to the previous `:<sha12>` image, handle migrations) and a short post-incident review template. | 10 | `docs/process/incident-and-rollback.md` |\n| P1 | Keep a CHANGELOG or GitHub release notes per production deploy, linked to PRs and requirements. | 7, 9 | `CHANGELOG.md` |\n| P1 | Add CODEOWNERS and a PR template (description, linked requirement or ADR, test evidence), and enforce required reviews and checks on `development` and `production`. | 2, 5 | `.github/CODEOWNERS`, `.github/pull_request_template.md` |\n| P1 | Update requirements for capabilities delivered after Phase 2 (tenants, webhooks, regatta), with acceptance links. Record the WCAG decision. | 1, 3 | `specs/phase3/REQUIREMENTS.md` or an update to `specs/phase2/REQUIREMENTS.md` |\n| P2 | Name process owners and the roles needed (developer, reviewer, release approver, on-call), and state record retention. | 4, 6, 8 | `docs/process/roles-and-records.md` |\n| P2 | Declare the delivery tracker (`AIH-…` tickets) and any wiki as sources in `.xianix/operation-sources.yaml`, so the next audit can use them. | 1, 6 | `.xianix/operation-sources.yaml` |\n\n---\n\n### Evidence assessed\n\n`README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `.agents/README.md`, `.agents/skills/branch-code-review/SKILL.md`, `.github/workflows/deploy-api.yml`, `.github/workflows/deploy-frontend.yml`, `api/README.md`, `frontend/README.md`, `docs/local-development.md`, `docs/conventions/enums.md`, `docs/decisions/*.md` (17), `specs/REQUIREMENTS.md`, `specs/SCOPING.md`, `specs/TECH_CHOICES.md`, `specs/phase2/README.md`, `specs/phase2/REQUIREMENTS.md`, `specs/phase2/SCOPING.md`, `specs/activity-metrics/*.md`, `load-testing/README.md`, `api/tests/AIHub.Domain.Tests/*.cs` (5), `api/src/AIHub.Api/Controllers/LeaderboardController.cs`, git history (`git log`, merges since 2026-08-01, reverts).\n\nNot assessed: the delivery tracker referenced by `AIH-…` commit keys and any wiki (not declared as sources); GitHub repository settings such as branch protection and environment reviewers (not visible in the repository); the uncommitted `frontend/package-lock.json` change.\n"
+    }
+  ]
+}

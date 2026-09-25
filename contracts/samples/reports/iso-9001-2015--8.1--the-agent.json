@@ -1,0 +1,885 @@
+{
+  "schema": "compliance-report.v1",
+  "standard": "ISO 9001:2015",
+  "standardKey": "iso-9001-2015",
+  "repository": "xianix-team/the-agent",
+  "baseline": {
+    "ref": "main",
+    "commit": "1d45f72"
+  },
+  "runAt": "2026-09-21T13:00:00Z",
+  "executionId": "local-2026-09-21-the-agent",
+  "pluginVersion": "operation@0.1.0 (local run)",
+  "scope": {
+    "sourcesMode": "implicit-git-repo",
+    "gitScope": "full repository"
+  },
+  "sources": [
+    {
+      "id": "codebase",
+      "provider": "git-repo",
+      "roles": [
+        "all"
+      ],
+      "verdict": "ok",
+      "artifacts": 27,
+      "note": "implicit fallback; docs site and issue tracker not declared"
+    }
+  ],
+  "notAssessed": [
+    "Published documentation site",
+    "Issue tracker",
+    "GitHub repository settings (branch protection, environment reviewers)",
+    "Azure VM runtime configuration"
+  ],
+  "controls": [
+    {
+      "control": "8.1",
+      "controlTitle": "Operational planning and control",
+      "controlGroup": "8",
+      "overall": "Partial",
+      "summary": "The Xianix Agent delivers a multi-tenant control plane that turns platform webhooks into isolated Claude Code executions, plus an executor image and an AI-DLC lifecycle service built on label-driven agents. Planning is documented in depth: architecture objectives, a tenant-isolation design, a rules specification, a webhook guide, an AI-DLC process with explicit human review gates, and Azure infrastructure and deployment runbooks. Controls are strong for the executor: shellcheck and a hermetic integration-test tier gate every tagged publish. They're weak for the agent image, which publishes on tag without running its 150 unit tests. Most commits reach `main` without a pull request, releases have no notes, and deployment always pulls `:latest`. Some maintained documents no longer match the code. There's no incident or rollback procedure. No core obligation is a Gap, so the overall 8.1 status is Partial.",
+      "obligations": [
+        {
+          "n": 1,
+          "title": "Product and service requirements determined",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/architecture.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/tenant-isolation-design.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/rules-json.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/ai-dlc-ping-pong.md"
+            }
+          ],
+          "gap": "Objectives and design goals, not a versioned requirement set; no customer or statutory data-handling requirements."
+        },
+        {
+          "n": 2,
+          "title": "Criteria for processes established",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/ai-dlc-ping-pong.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/publish-executor.yml"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/azure-deployment.md"
+            }
+          ],
+          "gap": "Service process defined; internal development, review and release criteria not written down."
+        },
+        {
+          "n": 3,
+          "title": "Criteria for acceptance of products and services established",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Executor/tests/integration_test.sh"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "tests/e2e/README.md"
+            }
+          ],
+          "gap": "No acceptance criteria for agent releases; e2e suite manual only; no named acceptor."
+        },
+        {
+          "n": 4,
+          "title": "Resources needed for conformity determined",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/azure-infrastructure.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "TheAgent/EnvConfig.cs"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Executor/Dockerfile"
+            }
+          ],
+          "gap": "People, roles and skills not determined."
+        },
+        {
+          "n": 5,
+          "title": "Processes controlled in accordance with the criteria",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/publish-executor.yml"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "command",
+              "sourceId": "codebase",
+              "locator": "git log --merges --since=2026-08-01 (4 of 36 commits)"
+            }
+          ],
+          "gap": "Agent image publishes without running its tests; most changes land on main without a PR."
+        },
+        {
+          "n": 6,
+          "title": "Documented information for confidence that processes ran as planned",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "commit",
+              "sourceId": "codebase",
+              "locator": "tags v1.6.0 … vv1.10.0"
+            },
+            {
+              "provider": "github",
+              "kind": "external",
+              "sourceId": "github",
+              "locator": "GitHub Actions runs"
+            }
+          ],
+          "gap": "Inconsistent tag naming; no retention stated; no VM deployment record."
+        },
+        {
+          "n": 7,
+          "title": "Documented information demonstrating product/service conformity",
+          "core": true,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/publish-executor.yml"
+            }
+          ],
+          "gap": "No retained test reports or release notes; nothing for the agent image."
+        },
+        {
+          "n": 8,
+          "title": "Planning outputs suitable for operations",
+          "core": false,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/azure-deployment.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/rules-json.md:598"
+            }
+          ],
+          "gap": "Documents have drifted from the code; no owners named."
+        },
+        {
+          "n": 9,
+          "title": "Planned changes controlled",
+          "core": false,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/tenant-isolation-design.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/ai-dlc-ping-pong.md"
+            }
+          ],
+          "gap": "No decision-record process or change log; direct commits to main."
+        },
+        {
+          "n": 10,
+          "title": "Unintended changes reviewed; adverse effects mitigated",
+          "core": false,
+          "verdict": "Gap",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Scripts/deploy.sh"
+            }
+          ],
+          "gap": "No incident, hotfix or rollback procedure; deploy always uses :latest."
+        },
+        {
+          "n": 11,
+          "title": "Outsourced processes identified (8.4 handoff only)",
+          "core": false,
+          "verdict": "Partial",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "README.md"
+            },
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "Docs/azure-infrastructure.md"
+            }
+          ],
+          "gap": "Providers mentioned but not listed with controls; third-party plugins are the main residual risk."
+        }
+      ],
+      "actions": [
+        {
+          "priority": "P0",
+          "text": "Run dotnet test as a gate in publish-theagent.yml and on pull requests; retain test reports.",
+          "closes": [
+            5,
+            7
+          ],
+          "artifact": ".github/workflows/publish-theagent.yml"
+        },
+        {
+          "priority": "P0",
+          "text": "Document the incident, hotfix and rollback procedure, including deploying a specific image tag.",
+          "closes": [
+            10
+          ],
+          "artifact": "Docs/incident-and-rollback.md"
+        },
+        {
+          "priority": "P0",
+          "text": "Require pull requests with review on main; add CODEOWNERS and a PR template.",
+          "closes": [
+            2,
+            5
+          ],
+          "artifact": ".github/CODEOWNERS"
+        },
+        {
+          "priority": "P1",
+          "text": "Publish release notes per tag and fix tag naming.",
+          "closes": [
+            6,
+            7,
+            9
+          ],
+          "artifact": "CHANGELOG.md"
+        },
+        {
+          "priority": "P1",
+          "text": "Bring Docs/rules-json.md back in line with the code; add status lines to design docs.",
+          "closes": [
+            8,
+            9
+          ],
+          "artifact": "Docs/rules-json.md"
+        },
+        {
+          "priority": "P1",
+          "text": "Write a Definition of Done and release checklist, including the e2e suite.",
+          "closes": [
+            3,
+            7
+          ],
+          "artifact": "Docs/definition-of-done.md"
+        },
+        {
+          "priority": "P2",
+          "text": "Record requirements for customer data handling.",
+          "closes": [
+            1
+          ],
+          "artifact": "Docs/requirements.md"
+        },
+        {
+          "priority": "P2",
+          "text": "Name maintainers and release owners; record VM deployments.",
+          "closes": [
+            4,
+            6
+          ],
+          "artifact": "Docs/operations.md"
+        },
+        {
+          "priority": "P2",
+          "text": "Declare the documentation site and issue tracker as sources.",
+          "closes": [
+            1,
+            8
+          ],
+          "artifact": ".xianix/operation-sources.yaml"
+        }
+      ],
+      "sections": [
+        {
+          "id": "product-and-service-requirements",
+          "title": "Product and service requirements",
+          "kind": "text",
+          "text": "Requirements are expressed as architecture objectives and design goals, not as a numbered set. The strongest are the tenant-isolation goals (security, filesystem and resource isolation, credential scoping) and the rules specification. The AI-DLC document defines the customer-facing service behaviour."
+        },
+        {
+          "id": "product-and-service-requirements-2",
+          "title": "Product and service requirements",
+          "kind": "table",
+          "columns": [
+            "Product / service",
+            "Requirement source (locator)",
+            "Type (customer / statutory / internal)",
+            "Linked acceptance",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Xianix Agent control plane",
+              "Docs/architecture.md (objectives)",
+              "internal",
+              "not linked",
+              "implicit"
+            ],
+            [
+              "Tenant isolation",
+              "Docs/tenant-isolation-design.md §2",
+              "internal / customer",
+              "Executor/tests/integration_test.sh (partially)",
+              "determined"
+            ],
+            [
+              "Rules configuration",
+              "Docs/rules-json.md",
+              "internal / customer",
+              "TheAgent.Tests/Rules/*",
+              "determined (documentation partly stale)"
+            ],
+            [
+              "Executor image",
+              "Executor/README.md, Docs/tenant-isolation-design.md",
+              "internal",
+              "Executor/tests/integration_test.sh",
+              "determined"
+            ],
+            [
+              "AI-DLC lifecycle service",
+              "Docs/ai-dlc-ping-pong.md",
+              "customer",
+              "human review at each phase (same document)",
+              "determined"
+            ],
+            [
+              "Webhook handling",
+              "Docs/webhook-headers-guide.md",
+              "internal",
+              "TheAgent.Tests/Rules/WebhookVerificationGateTests.cs",
+              "determined"
+            ],
+            [
+              "Customer data handling (tenant code, secrets)",
+              "not found",
+              "statutory / customer",
+              "not found",
+              "missing"
+            ]
+          ]
+        },
+        {
+          "id": "process-criteria",
+          "title": "Process criteria",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Owner",
+            "Entry conditions",
+            "Sequence / method",
+            "Measures / gates",
+            "Output",
+            "Criteria status"
+          ],
+          "rows": [
+            [
+              "Service design",
+              "not named",
+              "not stated",
+              "Design documents (Docs/*.md)",
+              "none",
+              "Design doc",
+              "Partial"
+            ],
+            [
+              "Development and merge",
+              "not named",
+              "not stated",
+              "Commits to main; occasional PRs",
+              "none",
+              "Commit",
+              "Gap"
+            ],
+            [
+              "Executor build, test and publish",
+              "not named",
+              "Tag v*, PR touching Executor/, or manual dispatch",
+              "shellcheck → integration tests → multi-arch build and push (publish-executor.yml)",
+              "shellcheck severity ≥ warning; hermetic integration tier",
+              "Image on Docker Hub",
+              "Conform"
+            ],
+            [
+              "Agent build and publish",
+              "not named",
+              "Tag v* or manual dispatch",
+              "Build and push (publish-theagent.yml)",
+              "none",
+              "Image on Docker Hub",
+              "Partial"
+            ],
+            [
+              "Deployment to the Azure VM",
+              "not named",
+              "Manual",
+              "Scripts/deploy.sh (pull :latest, restart), Docs/azure-deployment.md",
+              "none",
+              "Running agent",
+              "Partial"
+            ],
+            [
+              "Tenant secret management",
+              "not named",
+              "Tenant onboarding",
+              "Xians Secret Vault via with-envs secrets.*; Key Vault for host (Docs/azure-deployment.md §Per-Tenant Secrets)",
+              "mandatory fails fast",
+              "Resolved secrets",
+              "Conform"
+            ],
+            [
+              "Operations and monitoring",
+              "not named",
+              "not stated",
+              "docker logs, systemctl (Docs/azure-deployment.md)",
+              "none",
+              "not found",
+              "Partial"
+            ],
+            [
+              "AI-DLC lifecycle (service)",
+              "Human at each phase",
+              "Label applied by a human",
+              "Label-driven phases with review at each step (Docs/ai-dlc-ping-pong.md §1–2)",
+              "Human approval per phase; no self-review loops",
+              "Issues, ADRs, PRs, comments",
+              "Conform"
+            ],
+            [
+              "Incident handling and rollback",
+              "not named",
+              "not stated",
+              "not found",
+              "none",
+              "not found",
+              "Gap"
+            ]
+          ]
+        },
+        {
+          "id": "acceptance-criteria",
+          "title": "Acceptance criteria",
+          "kind": "table",
+          "columns": [
+            "Output (product / service)",
+            "Acceptance criterion",
+            "Who accepts",
+            "Record produced",
+            "Linked requirement",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Executor image release",
+              "shellcheck clean and integration tests pass before publish",
+              "CI (automatic)",
+              "GitHub Actions job log (not retained in repo)",
+              "Tenant isolation; executor contract",
+              "Partial"
+            ],
+            [
+              "Agent image release",
+              "not found",
+              "not named",
+              "not found",
+              "not found",
+              "Gap"
+            ],
+            [
+              "Full chain (webhook → result)",
+              "tests/e2e/e2e_test.sh echoes the planted token",
+              "not named",
+              "not retained",
+              "Architecture flow",
+              "Partial"
+            ],
+            [
+              "AI-DLC phase output",
+              "Human reviews and applies the next label",
+              "Human reviewer",
+              "Labels and comments on the issue or PR",
+              "Docs/ai-dlc-ping-pong.md",
+              "Conform"
+            ]
+          ]
+        },
+        {
+          "id": "resources-needed-for-conformity",
+          "title": "Resources needed for conformity",
+          "kind": "table",
+          "columns": [
+            "Resource",
+            "Kind (people / skill / tool / environment / information)",
+            "Process it supports",
+            "Evidence",
+            "Determined?"
+          ],
+          "rows": [
+            [
+              "Azure VM, managed identity, Key Vault, Bastion",
+              "environment",
+              "Deployment, operations",
+              "Docs/azure-infrastructure.md",
+              "yes"
+            ],
+            [
+              "Xians platform (ACP, Temporal workflows, Secret Vault, Knowledge)",
+              "environment",
+              "All runtime processes",
+              "README.md, TheAgent/EnvConfig.cs",
+              "yes"
+            ],
+            [
+              "Docker Engine, Docker Hub org 99xio",
+              "tool / environment",
+              "Build, publish, execution",
+              ".github/workflows/*, README.md",
+              "yes"
+            ],
+            [
+              "Anthropic API key, platform tokens (GitHub, Azure DevOps)",
+              "information",
+              "Execution",
+              "Docs/rules-json.md §5",
+              "yes"
+            ],
+            [
+              "Executor tooling (Node 20, Python 3.12, gh, jq, Claude Code CLI 2.1.201)",
+              "tool",
+              "Execution",
+              "Executor/Dockerfile",
+              "yes"
+            ],
+            [
+              "Maintainers, reviewers, release manager, on-call",
+              "people / skill",
+              "All internal processes",
+              "not found",
+              "no"
+            ]
+          ]
+        },
+        {
+          "id": "process-control-map",
+          "title": "Process control map",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Criterion",
+            "Control that enforces it",
+            "Evidence (locator)",
+            "Verdict"
+          ],
+          "rows": [
+            [
+              "Executor build, test and publish",
+              "Scripts are lint-clean",
+              "shellcheck job gates publish",
+              ".github/workflows/publish-executor.yml",
+              "Conform"
+            ],
+            [
+              "Executor build, test and publish",
+              "Image behaves as the control plane expects",
+              "Integration-test job gates publish",
+              ".github/workflows/publish-executor.yml, Executor/tests/integration_test.sh",
+              "Conform"
+            ],
+            [
+              "Agent build and publish",
+              "Code is tested before release",
+              "none (no test job)",
+              ".github/workflows/publish-theagent.yml",
+              "Gap"
+            ],
+            [
+              "Development and merge",
+              "Changes reviewed before merge",
+              "none enforced; most commits direct to main",
+              "git log --merges",
+              "Gap"
+            ],
+            [
+              "Deployment to the Azure VM",
+              "A known version is deployed",
+              "none (always :latest)",
+              "Scripts/deploy.sh, Docs/azure-deployment.md",
+              "Partial"
+            ],
+            [
+              "Tenant secret management",
+              "Tenants never borrow each other's credentials",
+              "Tenant-scoped vault lookups; mandatory fail-fast",
+              "Docs/azure-deployment.md, TheAgent/Rules/StartupEnvResolver.cs",
+              "Conform"
+            ],
+            [
+              "AI-DLC lifecycle",
+              "Humans set the pace; no self-review",
+              "Label-only triggers; skip when author is xianix-agent",
+              "Docs/ai-dlc-ping-pong.md §1",
+              "Conform (as designed; implementation status not stated)"
+            ]
+          ]
+        },
+        {
+          "id": "documented-information-inventory-maintain",
+          "title": "Documented information inventory — Maintain",
+          "kind": "table",
+          "columns": [
+            "Title",
+            "Purpose",
+            "Location",
+            "Owner",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Architecture and objectives",
+              "Requirements, planning",
+              "Docs/architecture.md, Docs/architecture-diagrams.html",
+              "not named",
+              "present"
+            ],
+            [
+              "Tenant isolation design",
+              "Requirements, criteria",
+              "Docs/tenant-isolation-design.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Rules configuration reference",
+              "Process criteria (service)",
+              "Docs/rules-json.md",
+              "not named",
+              "present (partly stale)"
+            ],
+            [
+              "AI-DLC process",
+              "Service process definition",
+              "Docs/ai-dlc-ping-pong.md",
+              "not named",
+              "present (implementation status not stated)"
+            ],
+            [
+              "Azure infrastructure and deployment",
+              "Resources, operations",
+              "Docs/azure-infrastructure.md, Docs/azure-deployment.md",
+              "not named",
+              "present"
+            ],
+            [
+              "Contributor guide, Definition of Done, release checklist",
+              "Process criteria, acceptance",
+              "not found",
+              "—",
+              "missing"
+            ],
+            [
+              "Incident, hotfix and rollback procedure",
+              "Unintended changes",
+              "not found",
+              "—",
+              "missing"
+            ]
+          ]
+        },
+        {
+          "id": "documented-information-inventory-retain",
+          "title": "Documented information inventory — Retain",
+          "kind": "table",
+          "columns": [
+            "Record",
+            "Demonstrates (process planned / conformity)",
+            "Location",
+            "Retention (if stated)",
+            "Status"
+          ],
+          "rows": [
+            [
+              "Release tags",
+              "process planned",
+              "git tags v1.6.0 … vv1.10.0",
+              "not stated",
+              "present (inconsistent naming)"
+            ],
+            [
+              "CI runs and step summaries",
+              "process planned / conformity (executor)",
+              "GitHub Actions (outside repo)",
+              "not stated",
+              "present"
+            ],
+            [
+              "Integration and e2e test results",
+              "conformity",
+              "not retained",
+              "—",
+              "missing"
+            ],
+            [
+              "Release notes / CHANGELOG",
+              "conformity",
+              "not found",
+              "—",
+              "missing"
+            ],
+            [
+              "VM deployment log",
+              "process planned",
+              "not found",
+              "—",
+              "missing"
+            ]
+          ]
+        },
+        {
+          "id": "change-control-planned-changes",
+          "title": "Change control — Planned changes",
+          "kind": "text",
+          "text": "Significant changes are planned in design documents (Docs/tenant-isolation-design.md starts from a problem statement and goals; Docs/ai-dlc-ping-pong.md states it supersedes the earlier triggers). Releases are semver-tagged, and executor releases pass automated gates. There is no decision-record index, no change log, and most changes are committed directly to main (4 merge commits among 36 commits since 2026-08-01). Tag names are inconsistent (vv1.8.0 onwards)."
+        },
+        {
+          "id": "change-control-unintended-changes",
+          "title": "Change control — Unintended changes",
+          "kind": "text",
+          "text": "not found as a process. Operations guidance covers viewing logs and restarting the service (Docs/azure-deployment.md). Scripts/deploy.sh always pulls :latest, so returning to a known-good version needs manual steps that aren't documented. There's no incident intake, post-incident review or corrective-action record."
+        },
+        {
+          "id": "outsourced-processes-8-4-handoff",
+          "title": "Outsourced processes (8.4 handoff)",
+          "kind": "table",
+          "columns": [
+            "Process",
+            "Provider (if known)",
+            "Current control (if any)",
+            "Residual 8.4 work"
+          ],
+          "rows": [
+            [
+              "Agent control plane, workflow engine, secret vault",
+              "Xians platform (ACP, Temporal)",
+              "Tenant-scoped secrets; required host keys",
+              "Supplier criteria, service levels, data handling"
+            ],
+            [
+              "LLM execution",
+              "Anthropic (Claude API via Claude Code SDK)",
+              "max-budget-usd, model selection per rule",
+              "Supplier control, data processing terms"
+            ],
+            [
+              "Image registry",
+              "Docker Hub (99xio)",
+              "CI publish with token",
+              "Supply-chain integrity (signing, provenance)"
+            ],
+            [
+              "Hosting",
+              "Microsoft Azure (VM, Key Vault, Bastion)",
+              "Infrastructure runbook",
+              "Backup, patching, service levels"
+            ],
+            [
+              "Source platforms",
+              "GitHub, Azure DevOps",
+              "Webhook verification gate",
+              "Supplier control"
+            ],
+            [
+              "Plugins that execute in tenant containers",
+              "Official and third-party plugin marketplaces",
+              "Container isolation; per-rule plugin list",
+              "Plugin vetting and provenance — highest residual risk"
+            ],
+            [
+              "Base tooling",
+              "npm, PyPI, apt, mise runtimes",
+              "Pinned CLI versions in Executor/Dockerfile",
+              "Dependency and licence review"
+            ]
+          ]
+        }
+      ],
+      "reportMd": "## ISO 9001:2015 — 8.1 Operational planning and control\n\n**Standard / control:** ISO 9001:2015, 8.1 Operational planning and control\n**Repository:** `xianix-team/the-agent` (local clone)\n**Baseline:** `main` @ `1d45f72` (clean working tree)\n**Sources file:** `implicit git-repo` (no `.xianix/operation-sources.yaml`, `compliance/operation-sources.yaml` or `--sources` found)\n**Git scope:** `full repository`\n**Products / services in scope:** Xianix Agent control plane (`99xio/xianix-agent` image); Xianix Executor (`99xio/xianix-executor` image); AI-DLC lifecycle service (label-triggered agents on customer repositories); Rules Optimizer chat\n**Processes in scope:** Service design (architecture and design docs); Development and merge; Executor build, test and publish; Agent build and publish; Deployment to the Azure VM; Tenant secret management; Operations and monitoring; AI-DLC lifecycle (service delivery); Incident handling and rollback\n**Report date:** `2026-09-21`\n**Overall 8.1 status:** `Partial`\n\n---\n\n### Sources used\n\n| Id | Provider | Roles | Verdict | Artifacts | Notes |\n|---|---|---|---|---|---|\n| codebase | git-repo | all (implicit fallback) | ok | 27 | The published documentation site (a separate repository) and any issue tracker are not declared, so they were not fetched. |\n\n---\n\n### Summary\n\nThe Xianix Agent delivers a multi-tenant control plane that turns platform webhooks into isolated Claude Code executions, plus an executor image and an AI-DLC lifecycle service built on label-driven agents. Planning is documented in depth: architecture objectives, a tenant-isolation design, a rules specification, a webhook guide, an AI-DLC process with explicit human review gates, and Azure infrastructure and deployment runbooks. Controls are strong for the executor: shellcheck and a hermetic integration-test tier gate every tagged publish. They're weak for the agent image, which publishes on tag without running its 150 unit tests. Most commits reach `main` without a pull request, releases have no notes, and deployment always pulls `:latest`. Some maintained documents no longer match the code. There's no incident or rollback procedure. No core obligation is a Gap, so the overall 8.1 status is Partial.\n\n---\n\n### Obligation scores\n\n| # | Obligation | Verdict | Evidence (path or `not found`) | Gap to close |\n|---|---|---|---|---|\n| 1 | Product and service requirements determined | Partial | `Docs/architecture.md` (objectives), `Docs/tenant-isolation-design.md` §2 (design goals), `Docs/rules-json.md`, `Docs/ai-dlc-ping-pong.md` | Requirements are a mix of objectives (some marked `***` or `??`) and design goals. There's no versioned requirement set, and no customer or statutory requirements (e.g. data handling for tenant repositories). |\n| 2 | Criteria for processes established | Partial | `Docs/ai-dlc-ping-pong.md` §1 (principles, human-set pace), `.github/workflows/publish-executor.yml` (gate order), `Docs/azure-deployment.md` | The service process (AI-DLC) is well defined. Internal development, review and release criteria aren't written down. |\n| 3 | Criteria for acceptance of products and services established | Partial | `Executor/tests/integration_test.sh` (executor acceptance), `tests/e2e/README.md` (full-chain proof), `Docs/ai-dlc-ping-pong.md` (human review at each phase) | No acceptance criteria for agent releases. The end-to-end suite is manual only. No named release acceptor. |\n| 4 | Resources needed for conformity determined | Partial | `Docs/azure-infrastructure.md`, `Docs/azure-deployment.md`, `TheAgent/EnvConfig.cs` (required host keys), `Executor/Dockerfile` | Infrastructure, tools and credentials are well described. People, roles and skills aren't. |\n| 5 | Processes controlled in accordance with the criteria | Partial | `.github/workflows/publish-executor.yml` (`shellcheck` → `integration-test` → `build-and-push`) | `publish-theagent.yml` publishes without running `TheAgent.Tests`. Most changes land on `main` without a PR (4 merges out of 36 commits since 2026-08-01). No CODEOWNERS or PR template. |\n| 6 | Documented information for confidence that processes ran as planned | Partial | Git tags `v1.6.0`…`vv1.10.0`, GitHub Actions runs and step summaries (`publish-*.yml`) | Tag naming is inconsistent (`vv1.8.0`, `vv1.9.0`, `vv1.10.0`). No retention period or owner is stated. Deployments to the VM leave no record. |\n| 7 | Documented information demonstrating product/service conformity | Partial | Integration-test job output before each executor publish (`publish-executor.yml`) | No retained test reports or release notes. No evidence for agent image conformity. e2e results aren't kept. |\n| 8 | Planning outputs suitable for operations | Partial | `Docs/azure-deployment.md` (operations reference), `Docs/rules-json.md` | Maintained documents have drifted from the code: `Docs/rules-json.md:598` says `metrics.*` isn't implemented (it is, in `TheAgent/Workflows/RaiseEventVariables.cs`); `:605` documents URL interpolation that `TheAgent/Activities/RaiseEventActivities.cs:25` doesn't do; `:567` shows an outdated AI Hub URL. No owners named. |\n| 9 | Planned changes controlled | Partial | `Docs/tenant-isolation-design.md`, `Docs/ai-dlc-ping-pong.md` (\"supersedes the existing … triggers\"), semver tags | No decision-record process or change log. Direct commits to `main`. The AI-DLC document supersedes `rules.json` triggers without a status saying whether that is done. |\n| 10 | Unintended changes reviewed; adverse effects mitigated | Gap | not found (`Docs/azure-deployment.md` covers logs and restart only; `Scripts/deploy.sh` always deploys `:latest`) | No incident, hotfix or rollback procedure. There's no way to redeploy a known-good version by tag, and no post-incident review, although the product offers a `postmortem-writer` agent to customers (`Docs/ai-dlc-ping-pong.md`). |\n| 11 | Outsourced processes identified (8.4 handoff only) | Partial | `README.md` (Xians platform, Docker Hub), `Docs/azure-infrastructure.md`, `Docs/rules-json.md` (plugin marketplace) | External providers are mentioned but not listed with controls. Third-party plugins that run customer code are the most significant. |\n\n---\n\n### Product and service requirements\n\nRequirements are expressed as architecture objectives and design goals, not as a numbered set. The strongest are the tenant-isolation goals (security, filesystem and resource isolation, credential scoping) and the rules specification. The AI-DLC document defines the customer-facing service behaviour.\n\n| Product / service | Requirement source (locator) | Type (customer / statutory / internal) | Linked acceptance | Status |\n|---|---|---|---|---|\n| Xianix Agent control plane | `Docs/architecture.md` (objectives) | internal | not linked | implicit |\n| Tenant isolation | `Docs/tenant-isolation-design.md` §2 | internal / customer | `Executor/tests/integration_test.sh` (partially) | determined |\n| Rules configuration | `Docs/rules-json.md` | internal / customer | `TheAgent.Tests/Rules/*` | determined (documentation partly stale) |\n| Executor image | `Executor/README.md`, `Docs/tenant-isolation-design.md` | internal | `Executor/tests/integration_test.sh` | determined |\n| AI-DLC lifecycle service | `Docs/ai-dlc-ping-pong.md` | customer | human review at each phase (same document) | determined |\n| Webhook handling | `Docs/webhook-headers-guide.md` | internal | `TheAgent.Tests/Rules/WebhookVerificationGateTests.cs` | determined |\n| Customer data handling (tenant code, secrets) | not found | statutory / customer | not found | missing |\n\n---\n\n### Process criteria\n\n| Process | Owner | Entry conditions | Sequence / method | Measures / gates | Output | Criteria status |\n|---|---|---|---|---|---|---|\n| Service design | not named | not stated | Design documents (`Docs/*.md`) | none | Design doc | Partial |\n| Development and merge | not named | not stated | Commits to `main`; occasional PRs | none | Commit | Gap |\n| Executor build, test and publish | not named | Tag `v*`, PR touching `Executor/`, or manual dispatch | `shellcheck` → integration tests → multi-arch build and push (`publish-executor.yml`) | shellcheck severity ≥ warning; hermetic integration tier | Image on Docker Hub | Conform |\n| Agent build and publish | not named | Tag `v*` or manual dispatch | Build and push (`publish-theagent.yml`) | none | Image on Docker Hub | Partial |\n| Deployment to the Azure VM | not named | Manual | `Scripts/deploy.sh` (pull `:latest`, restart), `Docs/azure-deployment.md` | none | Running agent | Partial |\n| Tenant secret management | not named | Tenant onboarding | Xians Secret Vault via `with-envs` `secrets.*`; Key Vault for host (`Docs/azure-deployment.md` §Per-Tenant Secrets) | `mandatory` fails fast | Resolved secrets | Conform |\n| Operations and monitoring | not named | not stated | `docker logs`, `systemctl` (`Docs/azure-deployment.md`) | none | not found | Partial |\n| AI-DLC lifecycle (service) | Human at each phase | Label applied by a human | Label-driven phases with review at each step (`Docs/ai-dlc-ping-pong.md` §1–2) | Human approval per phase; no self-review loops | Issues, ADRs, PRs, comments | Conform |\n| Incident handling and rollback | not named | not stated | not found | none | not found | Gap |\n\n---\n\n### Acceptance criteria\n\n| Output (product / service) | Acceptance criterion | Who accepts | Record produced | Linked requirement | Status |\n|---|---|---|---|---|---|\n| Executor image release | shellcheck clean and integration tests pass before publish | CI (automatic) | GitHub Actions job log (not retained in repo) | Tenant isolation; executor contract | Partial |\n| Agent image release | not found | not named | not found | not found | Gap |\n| Full chain (webhook → result) | `tests/e2e/e2e_test.sh` echoes the planted token | not named | not retained | Architecture flow | Partial |\n| AI-DLC phase output | Human reviews and applies the next label | Human reviewer | Labels and comments on the issue or PR | `Docs/ai-dlc-ping-pong.md` | Conform |\n\n---\n\n### Resources needed for conformity\n\n| Resource | Kind (people / skill / tool / environment / information) | Process it supports | Evidence | Determined? |\n|---|---|---|---|---|\n| Azure VM, managed identity, Key Vault, Bastion | environment | Deployment, operations | `Docs/azure-infrastructure.md` | yes |\n| Xians platform (ACP, Temporal workflows, Secret Vault, Knowledge) | environment | All runtime processes | `README.md`, `TheAgent/EnvConfig.cs` | yes |\n| Docker Engine, Docker Hub org `99xio` | tool / environment | Build, publish, execution | `.github/workflows/*`, `README.md` | yes |\n| Anthropic API key, platform tokens (GitHub, Azure DevOps) | information | Execution | `Docs/rules-json.md` §5 | yes |\n| Executor tooling (Node 20, Python 3.12, gh, jq, Claude Code CLI 2.1.201) | tool | Execution | `Executor/Dockerfile` | yes |\n| Maintainers, reviewers, release manager, on-call | people / skill | All internal processes | not found | no |\n\n---\n\n### Process control map\n\n| Process | Criterion | Control that enforces it | Evidence (locator) | Verdict |\n|---|---|---|---|---|\n| Executor build, test and publish | Scripts are lint-clean | `shellcheck` job gates publish | `.github/workflows/publish-executor.yml` | Conform |\n| Executor build, test and publish | Image behaves as the control plane expects | Integration-test job gates publish | `.github/workflows/publish-executor.yml`, `Executor/tests/integration_test.sh` | Conform |\n| Agent build and publish | Code is tested before release | none (no test job) | `.github/workflows/publish-theagent.yml` | Gap |\n| Development and merge | Changes reviewed before merge | none enforced; most commits direct to `main` | `git log --merges` | Gap |\n| Deployment to the Azure VM | A known version is deployed | none (always `:latest`) | `Scripts/deploy.sh`, `Docs/azure-deployment.md` | Partial |\n| Tenant secret management | Tenants never borrow each other's credentials | Tenant-scoped vault lookups; `mandatory` fail-fast | `Docs/azure-deployment.md`, `TheAgent/Rules/StartupEnvResolver.cs` | Conform |\n| AI-DLC lifecycle | Humans set the pace; no self-review | Label-only triggers; skip when author is `xianix-agent` | `Docs/ai-dlc-ping-pong.md` §1 | Conform (as designed; implementation status not stated) |\n\n---\n\n### Documented information inventory\n\n**Maintain** (current definitions, criteria, plans):\n\n| Title | Purpose | Location | Owner | Status |\n|---|---|---|---|---|\n| Architecture and objectives | Requirements, planning | `Docs/architecture.md`, `Docs/architecture-diagrams.html` | not named | present |\n| Tenant isolation design | Requirements, criteria | `Docs/tenant-isolation-design.md` | not named | present |\n| Rules configuration reference | Process criteria (service) | `Docs/rules-json.md` | not named | present (partly stale) |\n| AI-DLC process | Service process definition | `Docs/ai-dlc-ping-pong.md` | not named | present (implementation status not stated) |\n| Azure infrastructure and deployment | Resources, operations | `Docs/azure-infrastructure.md`, `Docs/azure-deployment.md` | not named | present |\n| Contributor guide, Definition of Done, release checklist | Process criteria, acceptance | not found | — | missing |\n| Incident, hotfix and rollback procedure | Unintended changes | not found | — | missing |\n\n**Retain** (records that a process ran as planned, and that output conformed):\n\n| Record | Demonstrates (process planned / conformity) | Location | Retention (if stated) | Status |\n|---|---|---|---|---|\n| Release tags | process planned | git tags `v1.6.0` … `vv1.10.0` | not stated | present (inconsistent naming) |\n| CI runs and step summaries | process planned / conformity (executor) | GitHub Actions (outside repo) | not stated | present |\n| Integration and e2e test results | conformity | not retained | — | missing |\n| Release notes / CHANGELOG | conformity | not found | — | missing |\n| VM deployment log | process planned | not found | — | missing |\n\n---\n\n### Change control\n\n**Planned changes**\n\nSignificant changes are planned in design documents (`Docs/tenant-isolation-design.md` starts from a problem statement and goals; `Docs/ai-dlc-ping-pong.md` states it supersedes the earlier triggers). Releases are semver-tagged, and executor releases pass automated gates. There is no decision-record index, no change log, and most changes are committed directly to `main` (4 merge commits among 36 commits since 2026-08-01). Tag names are inconsistent (`vv1.8.0` onwards).\n\n**Unintended changes**\n\n`not found` as a process. Operations guidance covers viewing logs and restarting the service (`Docs/azure-deployment.md`). `Scripts/deploy.sh` always pulls `:latest`, so returning to a known-good version needs manual steps that aren't documented. There's no incident intake, post-incident review or corrective-action record.\n\n---\n\n### Outsourced processes (8.4 handoff)\n\n> Not assessed under 8.4 in this report. Listed so a future 8.4 skill can take over.\n\n| Process | Provider (if known) | Current control (if any) | Residual 8.4 work |\n|---|---|---|---|\n| Agent control plane, workflow engine, secret vault | Xians platform (ACP, Temporal) | Tenant-scoped secrets; required host keys | Supplier criteria, service levels, data handling |\n| LLM execution | Anthropic (Claude API via Claude Code SDK) | `max-budget-usd`, model selection per rule | Supplier control, data processing terms |\n| Image registry | Docker Hub (`99xio`) | CI publish with token | Supply-chain integrity (signing, provenance) |\n| Hosting | Microsoft Azure (VM, Key Vault, Bastion) | Infrastructure runbook | Backup, patching, service levels |\n| Source platforms | GitHub, Azure DevOps | Webhook verification gate | Supplier control |\n| Plugins that execute in tenant containers | Official and third-party plugin marketplaces | Container isolation; per-rule plugin list | Plugin vetting and provenance — highest residual risk |\n| Base tooling | npm, PyPI, apt, mise runtimes | Pinned CLI versions in `Executor/Dockerfile` | Dependency and licence review |\n\n---\n\n### Recommended actions\n\nOrdered by 8.1 impact. Each action closes a named gap in the obligation table.\n\n| Priority | Action | Closes obligation # | Suggested artifact |\n|---|---|---|---|\n| P0 | Run `dotnet test` (150 tests) as a gate in `publish-theagent.yml` and on pull requests; retain test reports as artifacts. | 5, 7 | `.github/workflows/publish-theagent.yml` |\n| P0 | Document the incident, hotfix and rollback procedure, including deploying a specific image tag (add a `--tag` option to `Scripts/deploy.sh`). | 10 | `Docs/incident-and-rollback.md` |\n| P0 | Require pull requests with at least one review on `main`; add CODEOWNERS and a PR template. | 2, 5 | `.github/CODEOWNERS`, `.github/pull_request_template.md` |\n| P1 | Publish release notes per tag and fix tag naming (`vX.Y.Z`). | 6, 7, 9 | `CHANGELOG.md` |\n| P1 | Bring `Docs/rules-json.md` back in line with the code (`metrics.*`, URL interpolation, JSON escaping, AI Hub URL) and add a status line to design documents. | 8, 9 | `Docs/rules-json.md` |\n| P1 | Write a Definition of Done and release checklist, including when the e2e suite must run and where its results are kept. | 3, 7 | `Docs/definition-of-done.md` |\n| P2 | Record requirements for customer data handling (tenant repositories, secrets, LLM processing). | 1 | `Docs/requirements.md` |\n| P2 | Name maintainers and release owners; record deployments to the VM. | 4, 6 | `Docs/operations.md` |\n| P2 | Declare the documentation site and issue tracker as sources for the next audit. | 1, 8 | `.xianix/operation-sources.yaml` |\n\n---\n\n### Evidence assessed\n\n`README.md`, `LICENSE`, `Docs/architecture.md`, `Docs/tenant-isolation-design.md`, `Docs/rules-json.md`, `Docs/ai-dlc-ping-pong.md`, `Docs/webhook-headers-guide.md`, `Docs/azure-deployment.md`, `Docs/azure-infrastructure.md`, `.github/workflows/publish-executor.yml`, `.github/workflows/publish-theagent.yml`, `Scripts/deploy.sh`, `Executor/README.md`, `Executor/Dockerfile`, `Executor/tests/integration_test.sh`, `tests/e2e/README.md`, `tests/e2e/e2e_test.sh`, `TheAgent/EnvConfig.cs`, `TheAgent/Rules/StartupEnvResolver.cs`, `TheAgent/Workflows/RaiseEventVariables.cs`, `TheAgent/Activities/RaiseEventActivities.cs`, `TheAgent.Tests/**` (12 files, 150 tests), git history (tags, merges since 2026-08-01).\n\nNot assessed: the published documentation site and any issue tracker (not declared as sources); GitHub repository settings such as branch protection and environment reviewers (not visible in the repository); runtime configuration on the Azure VM.\n"
+    }
+  ]
+}
