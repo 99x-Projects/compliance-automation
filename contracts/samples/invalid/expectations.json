@@ -1,0 +1,62 @@
+{
+  "event--carries-report-markdown.json": {
+    "type": "event",
+    "error": "must NOT have additional properties"
+  },
+  "event--counts-mismatch.json": {
+    "type": "event",
+    "error": "dimensions.partial=3"
+  },
+  "event--detail-branch-link.json": {
+    "type": "event",
+    "error": "detail.url must be the commit permalink"
+  },
+  "event--missing-runAt.json": {
+    "type": "event",
+    "error": "must have required property 'runAt'"
+  },
+  "event--oversize.json": {
+    "type": "event",
+    "error": "the limit is 16384 (F17)"
+  },
+  "event--stored-detail-without-hash.json": {
+    "type": "event",
+    "error": "must have required property 'sha256'"
+  },
+  "event--unknown-schema-version.json": {
+    "type": "event",
+    "error": "must be equal to constant"
+  },
+  "event--unknown-verdict.json": {
+    "type": "event",
+    "error": "must be equal to one of the allowed values"
+  },
+  "event--uppercase-repository.json": {
+    "type": "event",
+    "error": "must match pattern"
+  },
+  "event--usage-on-two-events.json": {
+    "type": "event",
+    "error": "appears on 2 events"
+  },
+  "event--wrong-event-id.json": {
+    "type": "event",
+    "error": "eventId must be"
+  },
+  "report--action-closes-missing-obligation.json": {
+    "type": "report",
+    "error": "closes obligation 42, which does not exist"
+  },
+  "report--control-not-in-catalog.json": {
+    "type": "report",
+    "error": "is not in the iso-9001-2015 catalogue"
+  },
+  "report--evidence-from-undeclared-source.json": {
+    "type": "report",
+    "error": "cites source 'jira'"
+  },
+  "report--group-mismatch.json": {
+    "type": "report",
+    "error": "does not match catalogue parent"
+  }
+}

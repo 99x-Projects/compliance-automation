@@ -1,0 +1,12 @@
+{
+  "schema": "control-catalog.v1",
+  "standard": "ISO/IEC 27001:2022",
+  "standardKey": "iso-27001-2022",
+  "coverage": "sample",
+  "controls": [
+    { "id": "A.5", "title": "Organizational controls", "parent": null, "auditable": false },
+    { "id": "A.5.15", "title": "Access control", "parent": "A.5", "auditable": true },
+    { "id": "A.8", "title": "Technological controls", "parent": null, "auditable": false },
+    { "id": "A.8.13", "title": "Information backup", "parent": "A.8", "auditable": true }
+  ]
+}

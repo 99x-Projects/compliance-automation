@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/99x-Projects/compliance-automation/contracts/schemas/control-catalog.v1.schema.json",
+  "title": "Control catalogue (v1)",
+  "description": "The controls of one standard edition, as a hierarchy, with which ones have an audit skill. Ships with plugin releases so the dashboard can show planned controls and roll up large standards without hand-maintained lists. Titles are short headings only — never standard text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "standard", "standardKey", "coverage", "controls"],
+  "properties": {
+    "schema": { "const": "control-catalog.v1" },
+    "standard": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "standardKey": { "$ref": "compliance-common.v1.schema.json#/$defs/standardKey" },
+    "coverage": {
+      "description": "'complete' = every control of the edition is listed; 'partial' = only some; 'sample' = test data, not for production.",
+      "enum": ["complete", "partial", "sample"]
+    },
+    "controls": {
+      "type": "array", "minItems": 1, "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "parent", "auditable"],
+        "properties": {
+          "id": { "$ref": "compliance-common.v1.schema.json#/$defs/controlId" },
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "parent": {
+            "description": "Parent control id, or null for a top-level group.",
+            "oneOf": [ { "type": "null" }, { "$ref": "compliance-common.v1.schema.json#/$defs/controlId" } ]
+          },
+          "auditable": {
+            "description": "True for leaf controls an audit can assess (groups are false).",
+            "type": "boolean"
+          },
+          "skill": {
+            "description": "plugin:skill that assesses this control. Absent = planned.",
+            "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$", "maxLength": 120
+          }
+        }
+      }
+    }
+  }
+}

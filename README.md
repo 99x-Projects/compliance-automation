@@ -10,6 +10,10 @@ Evidence systems (Jira, ClickUp, Confluence, git, …) are **declared per consum
 |---|---|---|
 | [operation](plugins/operation) | 8 Operation | 8.1 skill available; multi-source providers; 8.2–8.7 planned |
 
+## Contracts
+
+Machine-readable report, event and control-catalogue schemas shared with 99x AI Hub live in [contracts/](contracts/README.md), with golden samples and contract checks (`tools/`, run in CI by `.github/workflows/contracts.yml`).
+
 ## Quick start
 
 ```bash

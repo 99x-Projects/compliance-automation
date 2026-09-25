@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v1.schema.json",
+  "title": "Compliance event for AI Hub (v1)",
+  "description": "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. Summary only: 'dimensions' holds flat, queryable facts, and obligations, actions and sources carry what dashboards show. Evidence, report sections and the full Markdown report stay in a repository, linked by 'detail'. Each event must stay under 16 KB.",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 200,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "notAssessed", "detail"],
+    "properties": {
+      "correlationId": {
+        "description": "The audit execution id. Groups every control from one execution.",
+        "type": "string", "pattern": "^[A-Za-z0-9._:-]+$", "maxLength": 120
+      },
+      "eventId": {
+        "description": "Idempotency key: <standardKey>:<control>:<repository>:<executionId>. AI Hub skips duplicates per team.",
+        "type": "string", "minLength": 1, "maxLength": 200
+      },
+      "actors": {
+        "type": "array", "minItems": 1, "maxItems": 5,
+        "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "dimensions": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "standard", "standardKey", "control", "controlTitle", "controlGroup", "repository", "commit", "baselineRef", "runAt", "executionId", "pluginVersion", "overall", "conform", "partial", "gap", "na", "p0Actions", "sourcesOk", "sourcesTotal", "sourcesMode", "notAssessedCount"],
+        "properties": {
+          "schema": { "const": "compliance.v1" },
+          "standard": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "standardKey": { "$ref": "compliance-common.v1.schema.json#/$defs/standardKey" },
+          "control": { "$ref": "compliance-common.v1.schema.json#/$defs/controlId" },
+          "controlTitle": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "controlGroup": { "$ref": "compliance-common.v1.schema.json#/$defs/controlId" },
+          "repository": { "$ref": "compliance-common.v1.schema.json#/$defs/repository" },
+          "commit": { "$ref": "compliance-common.v1.schema.json#/$defs/commit" },
+          "baselineRef": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "runAt": { "type": "string", "format": "date-time" },
+          "executionId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]+$", "maxLength": 120 },
+          "pluginVersion": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "overall": { "$ref": "compliance-common.v1.schema.json#/$defs/verdict" },
+          "conform": { "type": "integer", "minimum": 0 },
+          "partial": { "type": "integer", "minimum": 0 },
+          "gap": { "type": "integer", "minimum": 0 },
+          "na": { "type": "integer", "minimum": 0 },
+          "p0Actions": {
+            "description": "Number of P0 actions — separates 'Partial, nearly there' from 'Partial, far off'.",
+            "type": "integer", "minimum": 0
+          },
+          "sourcesOk": { "type": "integer", "minimum": 0 },
+          "sourcesTotal": { "type": "integer", "minimum": 1 },
+          "sourcesMode": { "enum": ["declared", "implicit-git-repo"] },
+          "notAssessedCount": { "type": "integer", "minimum": 0 },
+          "tokens": { "$ref": "compliance-common.v1.schema.json#/$defs/metricValue" },
+          "cacheReadTokens": { "$ref": "compliance-common.v1.schema.json#/$defs/metricValue" },
+          "costUsd": { "$ref": "compliance-common.v1.schema.json#/$defs/metricValue" },
+          "model": { "type": "string", "minLength": 1, "maxLength": 120 }
+        }
+      },
+      "summary": { "type": "string", "minLength": 1, "maxLength": 2000 },
+      "obligations": {
+        "type": "array", "minItems": 1, "maxItems": 200,
+        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/obligationSummary" }
+      },
+      "actions": {
+        "type": "array", "maxItems": 100,
+        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/action" }
+      },
+      "sources": {
+        "type": "array", "minItems": 1, "maxItems": 50,
+        "items": { "$ref": "compliance-common.v1.schema.json#/$defs/source" }
+      },
+      "notAssessed": {
+        "type": "array", "maxItems": 50,
+        "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "detail": { "$ref": "compliance-common.v1.schema.json#/$defs/detail" }
+    }
+  }
+}

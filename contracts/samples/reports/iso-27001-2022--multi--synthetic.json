@@ -1,0 +1,161 @@
+{
+  "schema": "compliance-report.v1",
+  "standard": "ISO/IEC 27001:2022",
+  "standardKey": "iso-27001-2022",
+  "repository": "example-org/sample-service",
+  "baseline": {
+    "ref": "main",
+    "commit": "0a1b2c3"
+  },
+  "runAt": "2026-09-20T09:30:00Z",
+  "executionId": "exec-sample-27001",
+  "pluginVersion": "isms@0.0.0-sample",
+  "scope": {
+    "sourcesMode": "declared",
+    "sourcesFile": ".xianix/isms-sources.yaml",
+    "gitScope": "full repository"
+  },
+  "sources": [
+    {
+      "id": "codebase",
+      "provider": "git-repo",
+      "roles": [
+        "process-control"
+      ],
+      "verdict": "ok",
+      "artifacts": 12
+    },
+    {
+      "id": "isms-wiki",
+      "provider": "confluence",
+      "roles": [
+        "documented-information"
+      ],
+      "verdict": "UNAVAILABLE",
+      "artifacts": 0,
+      "note": "ATLASSIAN-API-TOKEN missing"
+    }
+  ],
+  "notAssessed": [
+    "Identity provider configuration"
+  ],
+  "usage": {
+    "tokens": "{{metrics.tokens.total}}",
+    "costUsd": "{{metrics.cost-usd}}"
+  },
+  "controls": [
+    {
+      "control": "A.5.15",
+      "controlTitle": "Access control",
+      "controlGroup": "A.5",
+      "overall": "Partial",
+      "summary": "Synthetic sample for contract tests. Access rules exist for the deployment pipeline, but no access policy or periodic review was found.",
+      "obligations": [
+        {
+          "n": 1,
+          "title": "Access rules defined for systems in scope",
+          "core": true,
+          "verdict": "Partial",
+          "originalVerdict": "Partially implemented",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": ".github/workflows/deploy.yml"
+            }
+          ],
+          "gap": "Rules exist for CI only; no written access policy."
+        },
+        {
+          "n": 2,
+          "title": "Access rights reviewed periodically",
+          "core": true,
+          "verdict": "Gap",
+          "originalVerdict": "Not implemented",
+          "evidence": [],
+          "gap": "No review records found in declared sources."
+        },
+        {
+          "n": 3,
+          "title": "Privileged access restricted",
+          "core": true,
+          "verdict": "Conform",
+          "originalVerdict": "Implemented",
+          "evidence": [
+            {
+              "provider": "git-repo",
+              "kind": "path",
+              "sourceId": "codebase",
+              "locator": "CODEOWNERS"
+            }
+          ],
+          "gap": ""
+        }
+      ],
+      "actions": [
+        {
+          "priority": "P0",
+          "text": "Schedule and record a quarterly access review.",
+          "closes": [
+            2
+          ],
+          "artifact": "isms/access-review.md"
+        },
+        {
+          "priority": "P1",
+          "text": "Write an access policy covering all systems in scope.",
+          "closes": [
+            1
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "reviewed-systems",
+          "title": "Systems reviewed",
+          "kind": "table",
+          "columns": [
+            "System",
+            "Owner",
+            "Access model"
+          ],
+          "rows": [
+            [
+              "CI/CD",
+              "not named",
+              "Role-based"
+            ],
+            [
+              "Production database",
+              "not named",
+              "not found"
+            ]
+          ]
+        }
+      ],
+      "reportMd": "## ISO/IEC 27001:2022 — A.5.15 Access control\n\nSynthetic sample report used by contract tests.\n"
+    },
+    {
+      "control": "A.8.13",
+      "controlTitle": "Information backup",
+      "controlGroup": "A.8",
+      "overall": "N/A",
+      "summary": "Synthetic sample for contract tests. The service stores no persistent data of its own.",
+      "obligations": [
+        {
+          "n": 1,
+          "title": "Backups taken and tested",
+          "core": true,
+          "verdict": "N/A",
+          "originalVerdict": "Not applicable",
+          "evidence": [],
+          "gap": ""
+        }
+      ],
+      "actions": [],
+      "sections": [],
+      "reportMd": "## ISO/IEC 27001:2022 — A.8.13 Information backup\n\nNot applicable: the service is stateless.\n"
+    }
+  ]
+}

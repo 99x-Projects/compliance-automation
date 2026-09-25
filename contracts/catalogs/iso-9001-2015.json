@@ -1,0 +1,16 @@
+{
+  "schema": "control-catalog.v1",
+  "standard": "ISO 9001:2015",
+  "standardKey": "iso-9001-2015",
+  "coverage": "partial",
+  "controls": [
+    { "id": "8", "title": "Operation", "parent": null, "auditable": false },
+    { "id": "8.1", "title": "Operational planning and control", "parent": "8", "auditable": true, "skill": "operation:8-1-operational-planning-and-control" },
+    { "id": "8.2", "title": "Requirements for products and services", "parent": "8", "auditable": true },
+    { "id": "8.3", "title": "Design and development of products and services", "parent": "8", "auditable": true },
+    { "id": "8.4", "title": "Control of externally provided processes, products and services", "parent": "8", "auditable": true },
+    { "id": "8.5", "title": "Production and service provision", "parent": "8", "auditable": true },
+    { "id": "8.6", "title": "Release of products and services", "parent": "8", "auditable": true },
+    { "id": "8.7", "title": "Control of nonconforming outputs", "parent": "8", "auditable": true }
+  ]
+}
