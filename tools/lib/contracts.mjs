@@ -7,6 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMAS } from './contract-data.mjs';
 import { checkCatalog, checkEvents, checkReport } from './semantic.mjs';
+import { LEGACY_EVENT_SCHEMA } from './flatten.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'contracts');
 export const SCHEMAS_DIR = join(ROOT, 'schemas');
@@ -29,9 +30,16 @@ export function createValidators() {
     return `${e.instancePath || '/'} ${e.message}${allowed}${constant}`;
   });
   const wrap = (validate) => (data) => (validate(data) ? [] : describe(validate));
+  const eventV1 = wrap(get('compliance-event.v1.schema.json'));
+  const eventV2 = wrap(get('compliance-event.v2.schema.json'));
+  // Events saved by an earlier plugin version (a fallback comment, a file) are still v1 and must
+  // stay re-sendable, so a body that is v1 throughout is checked against v1. Anything else —
+  // including a mix, or an unknown version — is held to the current contract.
+  const isV1 = (events) => Array.isArray(events) && events.length > 0
+    && events.every((e) => e?.dimensions?.schema === LEGACY_EVENT_SCHEMA);
   return {
     report: wrap(get('compliance-report.v1.schema.json')),
-    event: wrap(get('compliance-event.v1.schema.json')),
+    event: (events) => (isV1(events) ? eventV1(events) : eventV2(events)),
     catalog: wrap(get('control-catalog.v1.schema.json')),
   };
 }

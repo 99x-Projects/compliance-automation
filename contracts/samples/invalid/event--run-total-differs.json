@@ -105,12 +105,9 @@
     ],
     "detail": {
       "status": "stored",
-      "provider": "github",
-      "repository": "example-org/sample-service",
-      "branch": "compliance-audits",
-      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
-      "path": "audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.5.15.md",
-      "url": "https://github.com/example-org/sample-service/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.5.15.md",
+      "provider": "aihub",
+      "artifactId": "art_2ce527f4d2",
+      "byteSize": 97,
       "sha256": "2ce527f4d22aedef9d67532d3fc7057c5822b3c74ec7237d3970bd1d715f16c2"
     }
   },
@@ -131,7 +128,7 @@
       "commit": "0a1b2c3",
       "baselineRef": "main",
       "runAt": "2026-09-20T09:30:00Z",
-      "runEvents": 2,
+      "runEvents": 5,
       "executionId": "exec-sample-27001",
       "pluginVersion": "isms@0.0.0-sample",
       "overall": "N/A",
@@ -143,8 +140,7 @@
       "sourcesOk": 1,
       "sourcesTotal": 2,
       "sourcesMode": "declared",
-      "notAssessedCount": 1,
-      "tokens": 1000
+      "notAssessedCount": 1
     },
     "summary": "Synthetic sample for contract tests. The service stores no persistent data of its own.",
     "obligations": [
@@ -185,12 +181,9 @@
     ],
     "detail": {
       "status": "stored",
-      "provider": "github",
-      "repository": "example-org/sample-service",
-      "branch": "compliance-audits",
-      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
-      "path": "audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.8.13.md",
-      "url": "https://github.com/example-org/sample-service/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-27001-2022/20260920T093000Z--exec-sample-27001/A.8.13.md",
+      "provider": "aihub",
+      "artifactId": "art_a5a8f64c4d",
+      "byteSize": 95,
       "sha256": "a5a8f64c4d88ef3235e8cf58c68c600dd50be5a599b0aada31ea8fae36dba797"
     }
   }

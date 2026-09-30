@@ -1,11 +1,12 @@
 // Reference flattener: one compliance report (report.json) → AI Hub events (one per control).
-// Events are summaries: evidence, sections and the Markdown report stay in the repository and
-// are linked through `detail` (see detail-files.mjs).
+// Events are summaries: evidence, sections and the Markdown report are stored separately (an
+// AI Hub artifact by default) and linked through `detail` (see detail-files.mjs).
 // The publisher (delivery step 3) uses this exact function; the golden event samples are
 // generated from it, so contract tests catch any drift between the two.
 
 export const DEFAULT_ACTOR = 'ISO Audit Agent';
-export const EVENT_SCHEMA = 'compliance.v1';
+export const EVENT_SCHEMA = 'compliance.v2';
+export const LEGACY_EVENT_SCHEMA = 'compliance.v1';
 const USAGE_KEYS = ['tokens', 'cacheReadTokens', 'costUsd', 'model'];
 export const MAX_EVENT_BYTES = 16 * 1024;
 export const MAX_GAP = 300;
@@ -55,6 +56,8 @@ export function flatten(report, { actor = DEFAULT_ACTOR, details = {} } = {}) {
       commit: report.baseline.commit,
       baselineRef: report.baseline.ref,
       runAt: report.runAt,
+      // One event per control, so this is how many AI Hub should expect before the run is complete.
+      runEvents: report.controls.length,
       executionId: report.executionId,
       pluginVersion: report.pluginVersion,
       overall: c.overall,
