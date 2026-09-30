@@ -76,9 +76,11 @@ export function checkReport(report, catalogs) {
   return errors;
 }
 
-// F18: a stored detail is linked by an immutable commit permalink to its own control's file.
+// F18: a stored detail names exactly one document. In AI Hub that is an artifact id, which the
+// schema requires together with the hash. In a repository it is an immutable commit permalink to
+// the control's own file, checked here.
 function checkDetail(detail, d, where) {
-  if (detail?.status !== 'stored') return [];
+  if (detail?.status !== 'stored' || detail.provider !== 'github') return [];
   const errors = [];
   if (!detail.url.endsWith(`/${detail.repository}/blob/${detail.commit}/${detail.path}`)) {
     errors.push(`${where}: detail.url must be the commit permalink …/${detail.repository}/blob/${detail.commit}/${detail.path}`);
@@ -94,6 +96,7 @@ export function checkEvents(events, catalogs) {
   const errors = [];
   const eventIds = new Set();
   const usageCarriers = new Map();
+  const runs = new Map();
 
   events.forEach((ev, i) => {
     const d = ev.dimensions;
@@ -120,13 +123,31 @@ export function checkEvents(events, catalogs) {
     errors.push(...checkObligationsAndActions(ev.obligations, ev.actions, ev.sources, where));
 
     const bytes = new TextEncoder().encode(JSON.stringify(ev)).length;
-    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the repository report`);
+    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the detailed report`);
     errors.push(...checkDetail(ev.detail, d, where));
+
+    if (d.runEvents !== undefined) {
+      const run = runs.get(ev.correlationId) ?? { declared: new Set(), present: 0 };
+      run.declared.add(d.runEvents);
+      run.present += 1;
+      runs.set(ev.correlationId, run);
+    }
 
     if (d.tokens !== undefined || d.costUsd !== undefined) {
       usageCarriers.set(ev.correlationId, (usageCarriers.get(ev.correlationId) ?? 0) + 1);
     }
   });
+
+  // AI Hub marks a run complete when runEvents events have arrived. A total that differs between
+  // events, or is smaller than what is being sent, would complete the run too early or never.
+  // Fewer events than declared is allowed: one part of a split fallback comment is re-sendable alone.
+  for (const [corr, run] of runs) {
+    if (run.declared.size > 1) {
+      errors.push(`execution ${corr}: dimensions.runEvents differs between events (${[...run.declared].sort((a, b) => a - b).join(', ')}); it is one total for the whole run`);
+    } else if (run.present > [...run.declared][0]) {
+      errors.push(`execution ${corr}: dimensions.runEvents=${[...run.declared][0]} but ${run.present} events are being sent`);
+    }
+  }
 
   for (const [corr, count] of usageCarriers) {
     if (count > 1) errors.push(`execution ${corr}: usage (tokens/costUsd) appears on ${count} events; it must be on one only`);
