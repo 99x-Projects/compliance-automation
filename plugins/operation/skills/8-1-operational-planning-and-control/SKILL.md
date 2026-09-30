@@ -183,7 +183,7 @@ Then run the publisher as described in the `/operation` command (**Publishing to
 - Every finding cites a source locator (or `not found`).
 - Do not invent metrics, owners, or ISO certificates.
 - Do not paste copyrighted standard wording.
-- Do not put secrets in the report or in git. Do not commit or push the report yourself; the publisher stores it on the `compliance-audits` branch.
+- Do not put secrets in the report or in git. Do not commit or push the report yourself; the publisher stores it.
 - Do not crawl undeclared systems (no extra Jira projects or wiki spaces).
 - Do not modify product source to "become compliant". Report and optional stubs under `compliance/iso-9001/8.1/` only if the user asked to create QMS files or that tree already exists.
 - Missing optional provider secrets → that source `UNAVAILABLE`, continue.

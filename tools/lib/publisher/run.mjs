@@ -1,8 +1,8 @@
-// The publisher: compliance-report.json → detailed report committed to the repository →
+// The publisher: compliance-report.json → detailed report stored (AI Hub artifacts by default) →
 // validated summary events → POST to AI Hub (option B) or file (option A).
 // Every side effect is injected so the whole flow is testable offline.
 //
-// A detailed report that cannot be committed is a warning, never a failure: the summary still
+// A detailed report that cannot be stored is a warning, never a failure: the summary still
 // goes to AI Hub, with detail.status telling the dashboard why there is no link.
 //
 // Exit codes: 0 done (delivered, written, or preserved in the fallback issue comment)
@@ -18,6 +18,7 @@ import {
   buildDetailComment, buildIssueComments, checkReachable, fetchIssueComment, parseIssueComment, postEvents, postIssueComment,
 } from './deliver.mjs';
 import { storeDetail } from './store-detail.mjs';
+import { storeArtifacts } from './store-artifacts.mjs';
 import { detailFiles } from '../detail-files.mjs';
 
 const MAX_DETAIL_COMMENTS = 10;
@@ -31,8 +32,9 @@ export const USAGE = `Usage: publish-aihub [options]
   --from-issue <url>    re-send events from a fallback GitHub issue comment (repeat for each part)
 
 Environment: AIHUB_PUBLISH=1 to POST; AIHUB_URL, AIHUB_NODE_ID, AIHUB_ACTIVITY_ID, AIHUB_API_KEY;
-GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off, default off,
-COMPLIANCE_DETAIL_REPO default: the audited repository, COMPLIANCE_DETAIL_BRANCH default: compliance-audits);
+COMPLIANCE_DETAIL_STORE=aihub|github|off for the detailed report (default aihub: uploaded to AI Hub
+with the same key; github commits it with GITHUB_TOKEN to COMPLIANCE_DETAIL_REPO, default the audited
+repository, on COMPLIANCE_DETAIL_BRANCH, default compliance-audits);
 optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n).`;
 
 function parseArgs(argv) {
@@ -138,7 +140,7 @@ export async function run({ argv, env, deps }) {
 
     const willPublish = config.publish && !opts.dryRun && cfgErrors.length === 0;
     const details = willPublish
-      ? await resolveDetails(report, config, { fetchImpl, log })
+      ? await resolveDetails(report, config, { fetchImpl, sleep, log })
       : allDetails(report, { status: 'disabled', reason: opts.dryRun ? 'dry run' : 'publishing is off' });
 
     events = flatten(report, { actor: config.actor, details });
@@ -187,9 +189,19 @@ function allDetails(report, detail) {
 
 const reasonText = (text) => (text.length > 300 ? `${text.slice(0, 299)}…` : text);
 
-async function resolveDetails(report, config, { fetchImpl, log }) {
+async function resolveDetails(report, config, { fetchImpl, sleep, log }) {
   if (config.detailStore === 'off') {
     return allDetails(report, { status: 'disabled', reason: 'COMPLIANCE_DETAIL_STORE is off' });
+  }
+  if (config.detailStore === 'aihub') {
+    const { details, stored, failed } = await storeArtifacts(report, config, { fetchImpl, sleep });
+    if (stored) log(`✓ detailed report stored in AI Hub (${stored} artifact${stored === 1 ? '' : 's'})`);
+    for (const f of failed) details[f.control] = { status: 'failed', reason: reasonText(f.reason) };
+    if (failed.length) {
+      const same = new Set(failed.map((f) => f.reason)).size === 1;
+      log(`⚠ detailed report not stored for ${same && failed.length > 1 ? `${failed.length} controls` : failed.map((f) => f.control).join(', ')}: ${same ? failed[0].reason : 'see each event'}; AI Hub gets the summary only`);
+    }
+    return details;
   }
   if (!config.githubToken) {
     log('⚠ GITHUB_TOKEN is not set: the detailed report is not stored; AI Hub gets the summary only');
