@@ -59,8 +59,8 @@ enabled: true                # optional, default true
 The skill resolves the source list once, then fetches. First match wins:
 
 1. `--sources <path>` on `/operation`
-2. Rule / prompt input `sources-file` or `sources-config` (JSON or YAML text)
-3. Env `OPERATION_SOURCES` (JSON) or `OPERATION_SOURCES_FILE` (path in the clone)
+2. **Webhook only:** rule / prompt input `sources-file` or `sources-config` (JSON or YAML text). Schedule rule sets have no payload — they **must omit `use-inputs`**.
+3. Env `OPERATION_SOURCES_FILE` (path in the clone) or `OPERATION_SOURCES` (JSON). This is the schedule-rule path: set them as `with-envs` constants.
 4. File in the cloned repo, first that exists:
    - `.xianix/operation-sources.yaml`
    - `.xianix/operation-sources.yml`
@@ -108,4 +108,4 @@ Never write tokens into the report, YAML, or git.
 
 Add a new vendor by adding `providers/<name>.md` and pointing a source at `provider: <name>`. Skills do not change.
 
-Project authors copy [../docs/operation-sources.example.yaml](../docs/operation-sources.example.yaml) into `.xianix/operation-sources.yaml`. Xianix rule wiring is in [../docs/rules-examples.md](../docs/rules-examples.md).
+Project authors copy [../docs/operation-sources.example.yaml](../docs/operation-sources.example.yaml) into `.xianix/operation-sources.yaml`. Webhook wiring: [../docs/rules-examples.md](../docs/rules-examples.md). Scheduled (cron) drop-in: [../docs/rules-schedule.json](../docs/rules-schedule.json) / [../docs/rules-schedule.md](../docs/rules-schedule.md).

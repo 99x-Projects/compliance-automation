@@ -155,28 +155,11 @@ Then: `Run /operation 8.1` and tell the prompt to parse `{{sources-config}}` as 
 
 ## Schedule (periodic 8.1 check)
 
-Clause 8.1 is often a **recurring** control check, not a PR event. A schedule rule set uses literal `repository` fields and the same `with-envs`:
+Do not paste a webhook execution under `schedule`. Cron ticks have no payload: omit `match-any` and `use-inputs`, use literal `repository` fields, and pass the sources path via `OPERATION_SOURCES_FILE` in rule-set-level `with-envs`.
 
-```json
-{
-  "name": "scheduled-iso-8-1",
-  "platform": "github",
-  "repository": {
-    "url": "https://github.com/<org>/<repo>.git",
-    "name": "<org>/<repo>",
-    "ref": "main"
-  },
-  "use-plugins": [
-    {
-      "plugin-name": "operation@compliance-automation",
-      "marketplace": "99x-Projects/compliance-automation"
-    }
-  ],
-  "execute-prompt": "Run /operation 8.1 --sources .xianix/operation-sources.yaml"
-}
-```
+Copy the drop-in file [rules-schedule.json](rules-schedule.json) into the agent's `rules.json`. Setup notes: [rules-schedule.md](rules-schedule.md).
 
-Put Atlassian / ClickUp tokens on the **rule-set-level** `with-envs` so every schedule execution receives them.
+After changing `cron` or `timezone`, deactivate and reactivate the agent so the scheduler reloads.
 
 ---
 
@@ -235,6 +218,7 @@ The publisher always validates `compliance-report.json`. With `AIHUB-PUBLISH` un
 | `ATLASSIAN-API-TOKEN` | `jira`, `confluence` | Atlassian API token |
 | `CLICKUP-TOKEN` | `clickup` | ClickUp API token |
 | `AIHUB-API-KEY` | publisher (AI Hub delivery) | dedicated AI Hub team key (`ah_tm_…`) |
+| `OPERATION_SOURCES_FILE` | schedule runs (constant path) | not a secret — path in the clone |
 
 :::warning Credentials
 Never put tokens in `operation-sources.yaml` or in `execute-prompt`. If a configured provider's secret is missing and `mandatory` is false, the run still starts; that source is `UNAVAILABLE` in the report.

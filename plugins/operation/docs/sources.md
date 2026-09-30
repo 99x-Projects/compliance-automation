@@ -18,7 +18,7 @@ Full contract: [../providers/_source-contract.md](../providers/_source-contract.
 | Put this | Here | Why |
 |---|---|---|
 | Jira site, JQL, Confluence space, ClickUp list id, git scope | **Project file** `.xianix/operation-sources.yaml` | Versioned with the product, reviewable, different per repo |
-| Same structure, when the product repo must not hold QMS pointers | **Xianix rule** `use-inputs` `sources-config` (constant YAML/JSON) | Tenant-level override |
+| Same structure, when the product repo must not hold QMS pointers | **Webhook rule** `use-inputs` `sources-config` (constant YAML/JSON), or **schedule rule** `with-envs` `OPERATION_SOURCES` / `OPERATION_SOURCES_FILE` | Tenant-level override. Schedule sets cannot use `use-inputs`. |
 | API tokens, Atlassian email | **Xianix rule** `with-envs` → `secrets.*` | Never committed |
 | How to call Jira / ClickUp / Confluence | **This plugin** `providers/` | Shared; add a vendor once |
 
@@ -42,7 +42,7 @@ A project that has Confluence + Jira + git typically declares **three** sources.
 
 ## Rule-level sources (optional)
 
-When the YAML cannot live in the product repo, pass it as a constant input (schedule and webhook both support `constant: true`):
+**Webhook** rule sets may pass a constant `use-inputs` entry:
 
 ```json
 {
@@ -52,9 +52,19 @@ When the YAML cannot live in the product repo, pass it as a constant input (sche
 }
 ```
 
-Or inline JSON in `sources-config` (same schema as the YAML `sources` array). Inline config is harder to review — prefer the file.
+Or inline JSON in `sources-config` (same schema as the YAML). Inline config is harder to review — prefer the file.
 
-See [rules-examples.md](rules-examples.md) for a full execution block.
+**Schedule** rule sets have no payload, so they omit `use-inputs`. Point at the YAML with a `with-envs` constant instead:
+
+```json
+{
+  "name": "OPERATION_SOURCES_FILE",
+  "value": ".xianix/operation-sources.yaml",
+  "constant": true
+}
+```
+
+Webhook execution blocks: [rules-examples.md](rules-examples.md). Drop-in cron file: [rules-schedule.json](rules-schedule.json) ([rules-schedule.md](rules-schedule.md)).
 
 ---
 

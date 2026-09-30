@@ -1,0 +1,57 @@
+[
+  {
+    "schedule": "iso-9001-8-1-operational-planning",
+    "cron": "0 6 * * 1",
+    "timezone": "UTC",
+    "with-envs": [
+      {
+        "name": "GITHUB-TOKEN",
+        "value": "secrets.GITHUB-TOKEN",
+        "mandatory": true
+      },
+      {
+        "name": "ANTHROPIC-API-KEY",
+        "value": "secrets.ANTHROPIC-API-KEY",
+        "mandatory": true
+      },
+      {
+        "name": "ATLASSIAN-EMAIL",
+        "value": "secrets.ATLASSIAN-EMAIL",
+        "mandatory": false
+      },
+      {
+        "name": "ATLASSIAN-API-TOKEN",
+        "value": "secrets.ATLASSIAN-API-TOKEN",
+        "mandatory": false
+      },
+      {
+        "name": "CLICKUP-TOKEN",
+        "value": "secrets.CLICKUP-TOKEN",
+        "mandatory": false
+      },
+      {
+        "name": "OPERATION_SOURCES_FILE",
+        "value": ".xianix/operation-sources.yaml",
+        "constant": true
+      }
+    ],
+    "executions": [
+      {
+        "name": "operation-8-1",
+        "platform": "github",
+        "repository": {
+          "url": "https://github.com/<org>/<repo>.git",
+          "name": "<org>/<repo>",
+          "ref": "main"
+        },
+        "use-plugins": [
+          {
+            "plugin-name": "operation@compliance-automation",
+            "marketplace": "99x-Projects/compliance-automation"
+          }
+        ],
+        "execute-prompt": "You are running a scheduled ISO 9001:2015 control 8.1 (Operational planning and control) check for {{repository-name}} on {{git-ref}}.\n\nThis is a cron run: there is no webhook payload, no issue, and no work item. Do not wait for labels.\n\nResolve evidence sources from OPERATION_SOURCES_FILE (default .xianix/operation-sources.yaml in the clone). Fetch every enabled source using the Operation plugin providers. Do not guess extra systems. Missing optional provider tokens mark that source UNAVAILABLE and the run continues.\n\nRun /operation 8.1 --sources .xianix/operation-sources.yaml\n\nWrite iso-9001-8.1-operational-planning-and-control.md at the repository root. Do not open a pull request and do not push unless this prompt is later extended to publish the report."
+      }
+    ]
+  }
+]
