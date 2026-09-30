@@ -38,7 +38,7 @@ flowchart LR
 | **Sources** (which systems *this* project uses) | `.xianix/operation-sources.yaml` or rule `sources-config` | space `QUALITY`, JQL `project = APP` |
 | **Secrets** | rule `with-envs` | `ATLASSIAN-API-TOKEN` |
 
-Details: [docs/sources.md](docs/sources.md) · contract: [providers/_source-contract.md](providers/_source-contract.md) · rule examples: [docs/rules-examples.md](docs/rules-examples.md).
+Details: [docs/sources.md](docs/sources.md) · contract: [providers/_source-contract.md](providers/_source-contract.md) · webhook rules: [docs/rules-examples.md](docs/rules-examples.md) · scheduled rule file: [docs/rules-schedule.json](docs/rules-schedule.json) ([docs/rules-schedule.md](docs/rules-schedule.md)).
 
 Copy [docs/operation-sources.example.yaml](docs/operation-sources.example.yaml) into the consuming repo as `.xianix/operation-sources.yaml`.
 
@@ -113,6 +113,8 @@ operation/
 ├── docs/
 │   ├── sources.md
 │   ├── rules-examples.md
+│   ├── rules-schedule.json
+│   ├── rules-schedule.md
 │   └── operation-sources.example.yaml
 └── README.md
 ```

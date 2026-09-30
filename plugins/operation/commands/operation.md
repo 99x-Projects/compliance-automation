@@ -33,6 +33,8 @@ Parse flags and pass them through:
 
 If the Xianix rule interpolated `{{sources-file}}` or `{{sources-config}}`, treat those as the source list even when the flag is omitted.
 
+On a **scheduled** rule there are no interpolations from a payload. Use `--sources`, or env `OPERATION_SOURCES_FILE` / `OPERATION_SOURCES` from rule-set `with-envs`. Do not wait for an issue, work item, or label.
+
 ## Output
 
 For 8.1, follow `skills/8-1-operational-planning-and-control/SKILL.md` and write the report using `styles/report-template.md`, plus `compliance-report.json` using `styles/report-json.md`.

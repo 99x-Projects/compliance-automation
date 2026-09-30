@@ -21,3 +21,5 @@ claude plugin marketplace add /path/to/compliance-automation
 /plugin install operation@compliance-automation
 /operation 8.1
 ```
+
+For a recurring 8.1 check, merge [plugins/operation/docs/rules-schedule.json](plugins/operation/docs/rules-schedule.json) into the Xianix agent's `rules.json`. See [plugins/operation/docs/rules-schedule.md](plugins/operation/docs/rules-schedule.md).
