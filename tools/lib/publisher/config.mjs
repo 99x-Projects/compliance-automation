@@ -22,10 +22,10 @@ export function readConfig(env) {
     githubToken: envValue(env, 'GITHUB_TOKEN'),
     githubApiUrl: (envValue(env, 'GITHUB_API_URL') ?? 'https://api.github.com').replace(/\/+$/, ''),
     githubServerUrl: (envValue(env, 'GITHUB_SERVER_URL') ?? 'https://github.com').replace(/\/+$/, ''),
-    // Where the detailed report goes. Default: nowhere. The audited repository is usually the
-    // customer's, so committing findings there has to be a deliberate choice, never a default.
-    // AI Hub's artifact store becomes the default once it exists (ADR 0019).
-    detailStore: envValue(env, 'COMPLIANCE_DETAIL_STORE')?.toLowerCase() ?? 'off',
+    // Where the detailed report goes. Default: AI Hub's artifact store, beside the summary, with
+    // the same key (AI Hub ADR 0019). The audited repository is usually the customer's, so
+    // committing findings there (github) has to be a deliberate choice, never a default.
+    detailStore: envValue(env, 'COMPLIANCE_DETAIL_STORE')?.toLowerCase() ?? 'aihub',
     detailRepo: envValue(env, 'COMPLIANCE_DETAIL_REPO')?.toLowerCase(),
     detailBranch: envValue(env, 'COMPLIANCE_DETAIL_BRANCH') ?? DEFAULT_DETAIL_BRANCH,
   };
@@ -48,7 +48,7 @@ export function configErrors(config) {
   if (config.fallbackIssue && !/^[\w.-]+\/[\w.-]+#\d+$/.test(config.fallbackIssue)) {
     errors.push('AIHUB_FALLBACK_ISSUE must look like owner/repo#123');
   }
-  if (!['github', 'off'].includes(config.detailStore)) errors.push('COMPLIANCE_DETAIL_STORE must be github or off');
+  if (!['aihub', 'github', 'off'].includes(config.detailStore)) errors.push('COMPLIANCE_DETAIL_STORE must be aihub, github or off');
   if (config.detailRepo && !/^[a-z0-9._-]+\/[a-z0-9._-]+$/.test(config.detailRepo)) {
     errors.push('COMPLIANCE_DETAIL_REPO must look like owner/repo');
   }
@@ -60,10 +60,16 @@ export function configErrors(config) {
 
 // Not errors: the summary still reaches AI Hub, only the link to the detailed report is missing.
 export function detailWarnings(config) {
-  if (!config.publish || config.detailStore === 'off') return [];
+  if (!config.publish || config.detailStore !== 'github') return [];
   return config.githubToken ? [] : ['GITHUB_TOKEN is not set: the detailed report cannot be committed and AI Hub will show the summary only'];
 }
 
+const activityUrl = (config) => `${config.url}/metrics/nodes/${encodeURIComponent(config.nodeId)}/node-activities/${encodeURIComponent(config.activityId)}`;
+
 export function ingestUrl(config) {
-  return `${config.url}/metrics/nodes/${encodeURIComponent(config.nodeId)}/node-activities/${encodeURIComponent(config.activityId)}/events`;
+  return `${activityUrl(config)}/events`;
+}
+
+export function artifactUrl(config) {
+  return `${activityUrl(config)}/artifacts`;
 }

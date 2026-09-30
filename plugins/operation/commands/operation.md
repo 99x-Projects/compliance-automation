@@ -57,14 +57,14 @@ PUBLISHER="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/scripts/publish-aihub.mjs}"
 
 | Exit code | Meaning | Do |
 |---|---|---|
-| `0` | Validated. Delivered, preserved in the fallback issue comment, or publishing is off. A detailed report that could not be committed is only a warning (`⚠`) | Report the outcome line it printed |
+| `0` | Validated. Delivered, preserved in the fallback issue comment, or publishing is off. A detailed report that could not be stored is only a warning (`⚠`) | Report the outcome line it printed |
 | `2` | `compliance-report.json` breaks the contract | Fix the JSON from the printed errors; run once more |
 | `3` | Publishing configuration is wrong | Report the errors; do not retry |
 | `4` | Delivery and the fallback both failed | Report it; do not retry |
 
 Never print or echo `AIHUB_API_KEY` or `GITHUB_TOKEN`, and never pass them on the command line — the publisher reads them from the environment.
 
-The publisher commits the detailed report (`compliance-report.json` and the Markdown report) to the `compliance-audits` branch itself, through the GitHub API. Do not commit, push or open a PR for these files yourself, and do not switch branches.
+The publisher stores the detailed report itself — in AI Hub by default. Do not commit, push or open a PR for these files yourself, and do not switch branches.
 
 ---
 

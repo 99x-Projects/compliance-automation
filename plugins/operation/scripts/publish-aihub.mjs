@@ -8027,7 +8027,8 @@ import { execFileSync } from "node:child_process";
 
 // lib/flatten.mjs
 var DEFAULT_ACTOR = "ISO Audit Agent";
-var EVENT_SCHEMA = "compliance.v1";
+var EVENT_SCHEMA = "compliance.v2";
+var LEGACY_EVENT_SCHEMA = "compliance.v1";
 var USAGE_KEYS = ["tokens", "cacheReadTokens", "costUsd", "model"];
 var MAX_EVENT_BYTES = 16 * 1024;
 var MAX_GAP = 300;
@@ -8070,6 +8071,8 @@ function flatten(report, { actor = DEFAULT_ACTOR, details = {} } = {}) {
       commit: report.baseline.commit,
       baselineRef: report.baseline.ref,
       runAt: report.runAt,
+      // One event per control, so this is how many AI Hub should expect before the run is complete.
+      runEvents: report.controls.length,
       executionId: report.executionId,
       pluginVersion: report.pluginVersion,
       overall: c.overall,
@@ -8506,6 +8509,143 @@ var compliance_event_v1_schema_default = {
   }
 };
 
+// ../contracts/schemas/compliance-event.v2.schema.json
+var compliance_event_v2_schema_default = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v2.schema.json",
+  title: "Compliance event for AI Hub (v2)",
+  description: "Body POSTed to AI Hub activity-scoped ingest (Hub event shape, blank mapping). One item per control assessed; all items of one execution share correlationId. Summary only: 'dimensions' holds flat, queryable facts, and obligations, actions and sources carry what dashboards show. Evidence, report sections and the full Markdown report are kept as the detailed report \u2014 an AI Hub artifact by default, or a repository file \u2014 linked by 'detail'. Each event must stay under 16 KB. Changes from v1: dimensions.runEvents is required, and detail may name an AI Hub artifact.",
+  type: "array",
+  minItems: 1,
+  maxItems: 200,
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["correlationId", "eventId", "actors", "dimensions", "summary", "obligations", "actions", "sources", "notAssessed", "detail"],
+    properties: {
+      correlationId: {
+        description: "The audit execution id. Groups every control from one execution.",
+        type: "string",
+        pattern: "^[A-Za-z0-9._:-]+$",
+        maxLength: 120
+      },
+      eventId: {
+        description: "Idempotency key: <standardKey>:<control>:<repository>:<executionId>. AI Hub skips duplicates per team.",
+        type: "string",
+        minLength: 1,
+        maxLength: 200
+      },
+      actors: {
+        type: "array",
+        minItems: 1,
+        maxItems: 5,
+        items: { type: "string", minLength: 1, maxLength: 200 }
+      },
+      dimensions: {
+        type: "object",
+        additionalProperties: false,
+        required: ["schema", "standard", "standardKey", "control", "controlTitle", "controlGroup", "repository", "commit", "baselineRef", "runAt", "runEvents", "executionId", "pluginVersion", "overall", "conform", "partial", "gap", "na", "p0Actions", "sourcesOk", "sourcesTotal", "sourcesMode", "notAssessedCount"],
+        properties: {
+          schema: { const: "compliance.v2" },
+          standard: { type: "string", minLength: 1, maxLength: 100 },
+          standardKey: { $ref: "compliance-common.v1.schema.json#/$defs/standardKey" },
+          control: { $ref: "compliance-common.v1.schema.json#/$defs/controlId" },
+          controlTitle: { type: "string", minLength: 1, maxLength: 200 },
+          controlGroup: { $ref: "compliance-common.v1.schema.json#/$defs/controlId" },
+          repository: { $ref: "compliance-common.v1.schema.json#/$defs/repository" },
+          commit: { $ref: "compliance-common.v1.schema.json#/$defs/commit" },
+          baselineRef: { type: "string", minLength: 1, maxLength: 200 },
+          runAt: { type: "string", format: "date-time" },
+          runEvents: {
+            description: "How many events this execution sends in total (one per control assessed). AI Hub treats the run as incomplete until that many have arrived, so a half-delivered run is never shown as the latest one.",
+            type: "integer",
+            minimum: 1,
+            maximum: 200
+          },
+          executionId: { type: "string", pattern: "^[A-Za-z0-9._:-]+$", maxLength: 120 },
+          pluginVersion: { type: "string", minLength: 1, maxLength: 120 },
+          overall: { $ref: "compliance-common.v1.schema.json#/$defs/verdict" },
+          conform: { type: "integer", minimum: 0 },
+          partial: { type: "integer", minimum: 0 },
+          gap: { type: "integer", minimum: 0 },
+          na: { type: "integer", minimum: 0 },
+          p0Actions: {
+            description: "Number of P0 actions \u2014 separates 'Partial, nearly there' from 'Partial, far off'.",
+            type: "integer",
+            minimum: 0
+          },
+          sourcesOk: { type: "integer", minimum: 0 },
+          sourcesTotal: { type: "integer", minimum: 1 },
+          sourcesMode: { enum: ["declared", "implicit-git-repo"] },
+          notAssessedCount: { type: "integer", minimum: 0 },
+          tokens: { $ref: "compliance-common.v1.schema.json#/$defs/metricValue" },
+          cacheReadTokens: { $ref: "compliance-common.v1.schema.json#/$defs/metricValue" },
+          costUsd: { $ref: "compliance-common.v1.schema.json#/$defs/metricValue" },
+          model: { type: "string", minLength: 1, maxLength: 120 }
+        }
+      },
+      summary: { type: "string", minLength: 1, maxLength: 2e3 },
+      obligations: {
+        type: "array",
+        minItems: 1,
+        maxItems: 200,
+        items: { $ref: "compliance-common.v1.schema.json#/$defs/obligationSummary" }
+      },
+      actions: {
+        type: "array",
+        maxItems: 100,
+        items: { $ref: "compliance-common.v1.schema.json#/$defs/action" }
+      },
+      sources: {
+        type: "array",
+        minItems: 1,
+        maxItems: 50,
+        items: { $ref: "compliance-common.v1.schema.json#/$defs/source" }
+      },
+      notAssessed: {
+        type: "array",
+        maxItems: 50,
+        items: { type: "string", minLength: 1, maxLength: 300 }
+      },
+      detail: { $ref: "#/$defs/detail" }
+    }
+  },
+  $defs: {
+    detail: {
+      description: "Where the detailed report for this control is kept; the event is the summary and links here. stored = kept as an AI Hub artifact (provider aihub, linked by artifact id) or committed to a repository branch (provider github, linked by commit permalink), with the SHA-256 of the stored bytes either way; issue-comment = a repository commit failed and the report was posted to the triggering issue; failed / disabled = no detail is available.",
+      type: "object",
+      additionalProperties: false,
+      required: ["status"],
+      properties: {
+        status: { enum: ["stored", "issue-comment", "failed", "disabled"] },
+        provider: { enum: ["aihub", "github"] },
+        artifactId: { description: "AI Hub artifact id, as returned by the upload.", type: "string", pattern: "^art_[A-Za-z0-9]{6,32}$" },
+        byteSize: { type: "integer", minimum: 1 },
+        repository: { $ref: "compliance-common.v1.schema.json#/$defs/repository" },
+        branch: { type: "string", pattern: "^[A-Za-z0-9._/-]+$", maxLength: 100 },
+        commit: { description: "Full commit SHA, so the link never moves.", type: "string", pattern: "^[0-9a-f]{40}$" },
+        path: { type: "string", pattern: "^[A-Za-z0-9._/-]+$", maxLength: 300 },
+        url: { type: "string", format: "uri", pattern: "^https://", maxLength: 600 },
+        sha256: { description: "SHA-256 of the stored report's bytes.", type: "string", pattern: "^[0-9a-f]{64}$" },
+        reason: { type: "string", minLength: 1, maxLength: 300 }
+      },
+      allOf: [
+        { if: { properties: { status: { const: "stored" } } }, then: { required: ["provider", "sha256"] } },
+        {
+          if: { properties: { status: { const: "stored" }, provider: { const: "aihub" } }, required: ["provider"] },
+          then: { required: ["artifactId"], properties: { repository: false, branch: false, commit: false, path: false, url: false } }
+        },
+        {
+          if: { properties: { status: { const: "stored" }, provider: { const: "github" } }, required: ["provider"] },
+          then: { required: ["repository", "branch", "commit", "path", "url"], properties: { artifactId: false, byteSize: false } }
+        },
+        { if: { properties: { status: { const: "issue-comment" } } }, then: { required: ["url", "reason"] } },
+        { if: { properties: { status: { enum: ["failed", "disabled"] } } }, then: { required: ["reason"] } }
+      ]
+    }
+  }
+};
+
 // ../contracts/schemas/control-catalog.v1.schema.json
 var control_catalog_v1_schema_default = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -8591,6 +8731,7 @@ var SCHEMAS = {
   "compliance-common.v1.schema.json": compliance_common_v1_schema_default,
   "compliance-report.v1.schema.json": compliance_report_v1_schema_default,
   "compliance-event.v1.schema.json": compliance_event_v1_schema_default,
+  "compliance-event.v2.schema.json": compliance_event_v2_schema_default,
   "control-catalog.v1.schema.json": control_catalog_v1_schema_default
 };
 var CATALOGS = {
@@ -8657,7 +8798,7 @@ function checkReport(report, catalogs) {
   return errors;
 }
 function checkDetail(detail, d, where) {
-  if (detail?.status !== "stored") return [];
+  if (detail?.status !== "stored" || detail.provider !== "github") return [];
   const errors = [];
   if (!detail.url.endsWith(`/${detail.repository}/blob/${detail.commit}/${detail.path}`)) {
     errors.push(`${where}: detail.url must be the commit permalink \u2026/${detail.repository}/blob/${detail.commit}/${detail.path}`);
@@ -8672,6 +8813,7 @@ function checkEvents(events, catalogs) {
   const errors = [];
   const eventIds = /* @__PURE__ */ new Set();
   const usageCarriers = /* @__PURE__ */ new Map();
+  const runs = /* @__PURE__ */ new Map();
   events.forEach((ev, i) => {
     const d = ev.dimensions;
     const where = `[${i}] (${d.control})`;
@@ -8693,12 +8835,25 @@ function checkEvents(events, catalogs) {
     errors.push(...checkControlAgainstCatalog(index, d.standardKey, d.control, d.controlTitle, d.controlGroup, where));
     errors.push(...checkObligationsAndActions(ev.obligations, ev.actions, ev.sources, where));
     const bytes = new TextEncoder().encode(JSON.stringify(ev)).length;
-    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the repository report`);
+    if (bytes > MAX_EVENT_BYTES) errors.push(`${where}: event is ${bytes} bytes; the limit is ${MAX_EVENT_BYTES} (F17). Detail belongs in the detailed report`);
     errors.push(...checkDetail(ev.detail, d, where));
+    if (d.runEvents !== void 0) {
+      const run2 = runs.get(ev.correlationId) ?? { declared: /* @__PURE__ */ new Set(), present: 0 };
+      run2.declared.add(d.runEvents);
+      run2.present += 1;
+      runs.set(ev.correlationId, run2);
+    }
     if (d.tokens !== void 0 || d.costUsd !== void 0) {
       usageCarriers.set(ev.correlationId, (usageCarriers.get(ev.correlationId) ?? 0) + 1);
     }
   });
+  for (const [corr, run2] of runs) {
+    if (run2.declared.size > 1) {
+      errors.push(`execution ${corr}: dimensions.runEvents differs between events (${[...run2.declared].sort((a, b) => a - b).join(", ")}); it is one total for the whole run`);
+    } else if (run2.present > [...run2.declared][0]) {
+      errors.push(`execution ${corr}: dimensions.runEvents=${[...run2.declared][0]} but ${run2.present} events are being sent`);
+    }
+  }
   for (const [corr, count] of usageCarriers) {
     if (count > 1) errors.push(`execution ${corr}: usage (tokens/costUsd) appears on ${count} events; it must be on one only`);
   }
@@ -8720,9 +8875,12 @@ function createValidators() {
     return `${e.instancePath || "/"} ${e.message}${allowed}${constant}`;
   });
   const wrap = (validate) => (data) => validate(data) ? [] : describe(validate);
+  const eventV1 = wrap(get("compliance-event.v1.schema.json"));
+  const eventV2 = wrap(get("compliance-event.v2.schema.json"));
+  const isV1 = (events) => Array.isArray(events) && events.length > 0 && events.every((e) => e?.dimensions?.schema === LEGACY_EVENT_SCHEMA);
   return {
     report: wrap(get("compliance-report.v1.schema.json")),
-    event: wrap(get("compliance-event.v1.schema.json")),
+    event: (events) => isV1(events) ? eventV1(events) : eventV2(events),
     catalog: wrap(get("control-catalog.v1.schema.json"))
   };
 }
@@ -8769,6 +8927,34 @@ function detailFiles(report) {
     ]
   };
 }
+function artifactUploads(report) {
+  return detailFiles(report).controls.map((c) => {
+    const id = eventIdFor(report, c.control);
+    return {
+      control: c.control,
+      body: {
+        key: id,
+        kind: "report",
+        name: `${safe(c.control)}.md`,
+        contentType: "text/markdown",
+        content: c.content,
+        sha256: sha256(c.content),
+        correlationId: report.executionId,
+        eventId: id,
+        attributes: { standardKey: report.standardKey, control: c.control, repository: report.repository }
+      }
+    };
+  });
+}
+function artifactDetail(body, artifactId) {
+  return {
+    status: "stored",
+    provider: "aihub",
+    artifactId,
+    byteSize: Buffer.byteLength(body.content, "utf8"),
+    sha256: body.sha256
+  };
+}
 function blobUrl(serverUrl, repository, commit, path) {
   return `${serverUrl.replace(/\/+$/, "")}/${repository}/blob/${commit}/${path}`;
 }
@@ -8806,10 +8992,10 @@ function readConfig(env) {
     githubToken: envValue(env, "GITHUB_TOKEN"),
     githubApiUrl: (envValue(env, "GITHUB_API_URL") ?? "https://api.github.com").replace(/\/+$/, ""),
     githubServerUrl: (envValue(env, "GITHUB_SERVER_URL") ?? "https://github.com").replace(/\/+$/, ""),
-    // Where the detailed report goes. Default: nowhere. The audited repository is usually the
-    // customer's, so committing findings there has to be a deliberate choice, never a default.
-    // AI Hub's artifact store becomes the default once it exists (ADR 0019).
-    detailStore: envValue(env, "COMPLIANCE_DETAIL_STORE")?.toLowerCase() ?? "off",
+    // Where the detailed report goes. Default: AI Hub's artifact store, beside the summary, with
+    // the same key (AI Hub ADR 0019). The audited repository is usually the customer's, so
+    // committing findings there (github) has to be a deliberate choice, never a default.
+    detailStore: envValue(env, "COMPLIANCE_DETAIL_STORE")?.toLowerCase() ?? "aihub",
     detailRepo: envValue(env, "COMPLIANCE_DETAIL_REPO")?.toLowerCase(),
     detailBranch: envValue(env, "COMPLIANCE_DETAIL_BRANCH") ?? DEFAULT_DETAIL_BRANCH
   };
@@ -8830,7 +9016,7 @@ function configErrors(config) {
   if (config.fallbackIssue && !/^[\w.-]+\/[\w.-]+#\d+$/.test(config.fallbackIssue)) {
     errors.push("AIHUB_FALLBACK_ISSUE must look like owner/repo#123");
   }
-  if (!["github", "off"].includes(config.detailStore)) errors.push("COMPLIANCE_DETAIL_STORE must be github or off");
+  if (!["aihub", "github", "off"].includes(config.detailStore)) errors.push("COMPLIANCE_DETAIL_STORE must be aihub, github or off");
   if (config.detailRepo && !/^[a-z0-9._-]+\/[a-z0-9._-]+$/.test(config.detailRepo)) {
     errors.push("COMPLIANCE_DETAIL_REPO must look like owner/repo");
   }
@@ -8840,11 +9026,15 @@ function configErrors(config) {
   return errors;
 }
 function detailWarnings(config) {
-  if (!config.publish || config.detailStore === "off") return [];
+  if (!config.publish || config.detailStore !== "github") return [];
   return config.githubToken ? [] : ["GITHUB_TOKEN is not set: the detailed report cannot be committed and AI Hub will show the summary only"];
 }
+var activityUrl = (config) => `${config.url}/metrics/nodes/${encodeURIComponent(config.nodeId)}/node-activities/${encodeURIComponent(config.activityId)}`;
 function ingestUrl(config) {
-  return `${config.url}/metrics/nodes/${encodeURIComponent(config.nodeId)}/node-activities/${encodeURIComponent(config.activityId)}/events`;
+  return `${activityUrl(config)}/events`;
+}
+function artifactUrl(config) {
+  return `${activityUrl(config)}/artifacts`;
 }
 
 // lib/publisher/finalize.mjs
@@ -9151,6 +9341,76 @@ async function storeDetail(report, config, { fetchImpl = fetch } = {}) {
   return { ok: false, error: String(lastError?.message ?? lastError), target };
 }
 
+// lib/publisher/store-artifacts.mjs
+var ARTIFACT_ID = /^art_[A-Za-z0-9]{6,32}$/;
+var SAME_FOR_ALL = /* @__PURE__ */ new Set([401, 403, 404]);
+function explain(status, body) {
+  if (status === 401) return "AI Hub refused the upload (401): the API key is not valid here, or this AI Hub has no artifact store yet";
+  if (status === 403) return "AI Hub refused the upload (403): the API key may not write to this team";
+  if (status === 404) return "AI Hub did not find the activity to upload to (404)";
+  if (status === 409) return "AI Hub already holds a different report under this execution id (409); artifacts are write-once";
+  let message = "";
+  try {
+    message = JSON.parse(body).error ?? "";
+  } catch {
+  }
+  return `AI Hub returned ${status || "no response"}${message ? `: ${message}` : ""}`;
+}
+async function uploadOne(body, config, { fetchImpl, sleep, attempts }) {
+  let last = { ok: false, status: 0, reason: "not attempted" };
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(artifactUrl(config), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Api-Key": config.apiKey },
+        body: JSON.stringify(body)
+      });
+      const text = await response.text();
+      if (response.ok) {
+        let data = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+        }
+        if (typeof data.artifactId !== "string" || !ARTIFACT_ID.test(data.artifactId)) {
+          return { ok: false, status: response.status, reason: "AI Hub accepted the upload but returned no artifact id" };
+        }
+        if (data.sha256 !== body.sha256) {
+          return { ok: false, status: response.status, reason: "AI Hub stored different bytes than were sent (SHA-256 mismatch)" };
+        }
+        return { ok: true, artifactId: data.artifactId, created: data.created !== false };
+      }
+      last = { ok: false, status: response.status, reason: explain(response.status, text) };
+      if (response.status < 500 && response.status !== 429) return last;
+    } catch (err) {
+      last = { ok: false, status: 0, reason: `AI Hub could not be reached: ${String(err?.message ?? err)}` };
+    }
+    if (attempt < attempts) await sleep(1e3 * 2 ** (attempt - 1));
+  }
+  return last;
+}
+async function storeArtifacts(report, config, { fetchImpl = fetch, sleep = defaultSleep2, attempts = 3 } = {}) {
+  const details = {};
+  const failed = [];
+  let stored = 0;
+  let abandon = null;
+  for (const { control, body } of artifactUploads(report)) {
+    const result = abandon ?? await uploadOne(body, config, { fetchImpl, sleep, attempts });
+    if (result.ok) {
+      stored += 1;
+      details[control] = artifactDetail(body, result.artifactId);
+    } else {
+      failed.push({ control, reason: result.reason });
+      details[control] = { status: "failed", reason: result.reason };
+      if (SAME_FOR_ALL.has(result.status)) abandon = result;
+    }
+  }
+  return { details, stored, failed };
+}
+function defaultSleep2(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // lib/publisher/run.mjs
 var MAX_DETAIL_COMMENTS = 10;
 var USAGE = `Usage: publish-aihub [options]
@@ -9162,8 +9422,9 @@ var USAGE = `Usage: publish-aihub [options]
   --from-issue <url>    re-send events from a fallback GitHub issue comment (repeat for each part)
 
 Environment: AIHUB_PUBLISH=1 to POST; AIHUB_URL, AIHUB_NODE_ID, AIHUB_ACTIVITY_ID, AIHUB_API_KEY;
-GITHUB_TOKEN to commit the detailed report (COMPLIANCE_DETAIL_STORE=github|off, default off,
-COMPLIANCE_DETAIL_REPO default: the audited repository, COMPLIANCE_DETAIL_BRANCH default: compliance-audits);
+COMPLIANCE_DETAIL_STORE=aihub|github|off for the detailed report (default aihub: uploaded to AI Hub
+with the same key; github commits it with GITHUB_TOKEN to COMPLIANCE_DETAIL_REPO, default the audited
+repository, on COMPLIANCE_DETAIL_BRANCH, default compliance-audits);
 optional EXECUTION_ID, AIHUB_ACTOR, AIHUB_FALLBACK_ISSUE (owner/repo#n).`;
 function parseArgs(argv) {
   const opts = { report: "compliance-report.json", out: "aihub-event.json" };
@@ -9260,7 +9521,7 @@ ${USAGE}`);
       return 2;
     }
     const willPublish = config.publish && !opts.dryRun && cfgErrors.length === 0;
-    const details = willPublish ? await resolveDetails(report, config, { fetchImpl, log }) : allDetails(report, { status: "disabled", reason: opts.dryRun ? "dry run" : "publishing is off" });
+    const details = willPublish ? await resolveDetails(report, config, { fetchImpl, sleep, log }) : allDetails(report, { status: "disabled", reason: opts.dryRun ? "dry run" : "publishing is off" });
     events = flatten(report, { actor: config.actor, details });
     const eventErrors = validateEvents(validators, events, catalogs);
     if (eventErrors.length) {
@@ -9302,9 +9563,19 @@ function allDetails(report, detail) {
   return Object.fromEntries(report.controls.map((c) => [c.control, detail]));
 }
 var reasonText = (text) => text.length > 300 ? `${text.slice(0, 299)}\u2026` : text;
-async function resolveDetails(report, config, { fetchImpl, log }) {
+async function resolveDetails(report, config, { fetchImpl, sleep, log }) {
   if (config.detailStore === "off") {
     return allDetails(report, { status: "disabled", reason: "COMPLIANCE_DETAIL_STORE is off" });
+  }
+  if (config.detailStore === "aihub") {
+    const { details: details2, stored: stored2, failed } = await storeArtifacts(report, config, { fetchImpl, sleep });
+    if (stored2) log(`\u2713 detailed report stored in AI Hub (${stored2} artifact${stored2 === 1 ? "" : "s"})`);
+    for (const f of failed) details2[f.control] = { status: "failed", reason: reasonText(f.reason) };
+    if (failed.length) {
+      const same = new Set(failed.map((f) => f.reason)).size === 1;
+      log(`\u26A0 detailed report not stored for ${same && failed.length > 1 ? `${failed.length} controls` : failed.map((f) => f.control).join(", ")}: ${same ? failed[0].reason : "see each event"}; AI Hub gets the summary only`);
+    }
+    return details2;
   }
   if (!config.githubToken) {
     log("\u26A0 GITHUB_TOKEN is not set: the detailed report is not stored; AI Hub gets the summary only");
@@ -9330,7 +9601,7 @@ async function resolveDetails(report, config, { fetchImpl, log }) {
 }
 
 // publisher-entry.mjs
-var pluginVersion = true ? "operation@0.2.0" : "operation@dev";
+var pluginVersion = true ? "operation@0.3.0" : "operation@dev";
 function git(args) {
   try {
     return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || void 0;
