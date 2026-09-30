@@ -1,4 +1,12 @@
 {
+  "event--aihub-detail-with-repository-link.json": {
+    "type": "event",
+    "error": "/0/detail/url boolean schema is false"
+  },
+  "event--aihub-detail-without-artifact.json": {
+    "type": "event",
+    "error": "must have required property 'artifactId'"
+  },
   "event--carries-report-markdown.json": {
     "type": "event",
     "error": "must NOT have additional properties"
@@ -15,9 +23,17 @@
     "type": "event",
     "error": "must have required property 'runAt'"
   },
+  "event--more-events-than-run-total.json": {
+    "type": "event",
+    "error": "dimensions.runEvents=1 but 2 events are being sent"
+  },
   "event--oversize.json": {
     "type": "event",
     "error": "the limit is 16384 (F17)"
+  },
+  "event--run-total-differs.json": {
+    "type": "event",
+    "error": "dimensions.runEvents differs between events"
   },
   "event--stored-detail-without-hash.json": {
     "type": "event",
