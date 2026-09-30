@@ -165,7 +165,7 @@ After changing `cron` or `timezone`, deactivate and reactivate the agent so the 
 
 ## Publish results to AI Hub (pilot)
 
-Adds AI Hub delivery to the GitHub example above. The publisher runs inside the executor. It first commits the detailed report to a `compliance-audits` branch of the audited repository, then POSTs one summary event per control assessed to the team's `compliance-audit` activity, linking to that commit. Get the node and activity ids from AI Hub (**Compliance → Enable compliance**, or the activity's **Webhooks** tab, API-key option).
+Adds AI Hub delivery to the GitHub example above. The publisher runs inside the executor. It first uploads each control's detailed report to AI Hub as a write-once artifact, then POSTs one summary event per control assessed to the team's `compliance-audit` activity, linking to that artifact by id and SHA-256. Both use the same API key, and nothing is written to the audited repository. Get the node and activity ids from AI Hub (**Compliance → Enable compliance**, or the activity's **Webhooks** tab, API-key option).
 
 Add to `with-envs`:
 
@@ -177,15 +177,23 @@ Add to `with-envs`:
 { "name": "AIHUB-API-KEY", "value": "secrets.AIHUB-API-KEY", "mandatory": true }
 ```
 
-The detailed report uses the `GITHUB-TOKEN` the rule already has; it needs **Contents: write** on the audited repository. Optional:
+`COMPLIANCE-DETAIL-STORE` chooses where the detailed report goes:
+
+| Value | Detailed report |
+|---|---|
+| `aihub` (default) | Uploaded to AI Hub, beside the summary. Readable by whoever can read the team's events there. If an upload fails, the event says why and the summary is still delivered |
+| `github` | Committed to a repository — see below. **Opt-in**: the audited repository is usually the customer's, and findings committed there are visible to them |
+| `off` | Not stored; AI Hub gets the summary only |
+
+For `github`, the publisher uses the `GITHUB-TOKEN` the rule already has; it needs **Contents: write** on the target repository:
 
 ```json
+{ "name": "COMPLIANCE-DETAIL-STORE", "value": "github", "constant": true },
 { "name": "COMPLIANCE-DETAIL-REPO", "value": "org/audit-records", "constant": true },
-{ "name": "COMPLIANCE-DETAIL-BRANCH", "value": "compliance-audits", "constant": true },
-{ "name": "COMPLIANCE-DETAIL-STORE", "value": "off", "constant": true }
+{ "name": "COMPLIANCE-DETAIL-BRANCH", "value": "compliance-audits", "constant": true }
 ```
 
-`COMPLIANCE-DETAIL-REPO` sends every team's reports to one records repository; `COMPLIANCE-DETAIL-STORE=off` sends the summary only. The branch shares no history with the code: it doesn't trigger CI, isn't under branch protection, and isn't read back as evidence by the next audit. Each run adds one commit under `audits/<standard>/<run time>--<execution id>/`; nothing is ever force-pushed. If the commit fails, the report goes to the fallback issue instead and AI Hub links there.
+`COMPLIANCE-DETAIL-REPO` sends every team's reports to one records repository (default: the audited repository). The branch shares no history with the code: it doesn't trigger CI, isn't under branch protection, and isn't read back as evidence by the next audit. Each run adds one commit under `audits/<standard>/<run time>--<execution id>/`; nothing is ever force-pushed. If the commit fails and a fallback issue is set, the report goes there instead and AI Hub links to it.
 
 Optionally block web search for the audit run (providers use `curl`, the `generic` provider may use web fetch):
 
@@ -193,12 +201,12 @@ Optionally block web search for the audit run (providers use `curl`, the `generi
 "disallowed-tools": "WebSearch"
 ```
 
-And end `execute-prompt` with the fallback issue, so undelivered results land somewhere durable:
+Optionally end `execute-prompt` with a fallback issue, so undelivered results land somewhere durable. The summary is posted there as a comment, so choose an issue in a repository the customer cannot read:
 
 ```text
 …Run /operation 8.1 --sources {{sources-file}}
 
-When publishing, set AIHUB_FALLBACK_ISSUE={{repository-name}}#{{issue-number}} for the publisher.
+When publishing, set AIHUB_FALLBACK_ISSUE=org/audit-records#1 for the publisher.
 ```
 
 :::caution Pilot security
@@ -213,7 +221,7 @@ The publisher always validates `compliance-report.json`. With `AIHUB-PUBLISH` un
 
 | Env name in `with-envs` | Used by | Typical vault key |
 |---|---|---|
-| `GITHUB-TOKEN` / `AZURE-DEVOPS-TOKEN` | git clone / optional posting; publisher commits the detailed report (GitHub, Contents: write) | git host PAT |
+| `GITHUB-TOKEN` / `AZURE-DEVOPS-TOKEN` | git clone / optional posting; with `COMPLIANCE-DETAIL-STORE=github`, the publisher commits the detailed report (Contents: write) | git host PAT |
 | `ATLASSIAN-EMAIL` | `jira`, `confluence` | Atlassian account email |
 | `ATLASSIAN-API-TOKEN` | `jira`, `confluence` | Atlassian API token |
 | `CLICKUP-TOKEN` | `clickup` | ClickUp API token |

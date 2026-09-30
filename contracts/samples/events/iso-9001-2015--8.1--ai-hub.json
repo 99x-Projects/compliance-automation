@@ -6,7 +6,7 @@
       "ISO Audit Agent"
     ],
     "dimensions": {
-      "schema": "compliance.v1",
+      "schema": "compliance.v2",
       "standard": "ISO 9001:2015",
       "standardKey": "iso-9001-2015",
       "control": "8.1",
@@ -16,6 +16,7 @@
       "commit": "e59aaa7",
       "baselineRef": "development",
       "runAt": "2026-09-21T11:00:00Z",
+      "runEvents": 1,
       "executionId": "local-2026-09-21-ai-hub",
       "pluginVersion": "operation@0.1.0 (local run)",
       "overall": "Gap",
@@ -214,12 +215,9 @@
     ],
     "detail": {
       "status": "stored",
-      "provider": "github",
-      "repository": "99x-internal/ai-hub",
-      "branch": "compliance-audits",
-      "commit": "3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02",
-      "path": "audits/iso-9001-2015/20260921T110000Z--local-2026-09-21-ai-hub/8.1.md",
-      "url": "https://github.com/99x-internal/ai-hub/blob/3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02/audits/iso-9001-2015/20260921T110000Z--local-2026-09-21-ai-hub/8.1.md",
+      "provider": "aihub",
+      "artifactId": "art_d645efe6b5",
+      "byteSize": 20058,
       "sha256": "d645efe6b5fa57669e3329c6e1e18e199f148cd7de19e8235b544775de027995"
     }
   }

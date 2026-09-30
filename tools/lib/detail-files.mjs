@@ -1,7 +1,8 @@
-// The detailed report as it is committed to a repository: one folder per execution, holding the
-// full compliance-report.json and one Markdown report per control. AI Hub events link to the
-// control's Markdown file by commit permalink and carry its SHA-256.
+// The detailed report: one Markdown report per control, which each event links to with its
+// SHA-256. It is stored as AI Hub artifacts (the default) or committed to a repository, where one
+// folder per execution also holds the full compliance-report.json.
 import { createHash } from 'node:crypto';
+import { eventIdFor } from './flatten.mjs';
 
 export const DEFAULT_DETAIL_BRANCH = 'compliance-audits';
 
@@ -31,6 +32,39 @@ export function detailFiles(report) {
       { path: `${folder}/compliance-report.json`, content: `${JSON.stringify(report, null, 2)}\n` },
       ...controls.map(({ path, content }) => ({ path, content })),
     ],
+  };
+}
+
+// One upload per control for AI Hub's artifact store. The key is the control's eventId, so a
+// retried run finds what its first attempt stored instead of storing it twice.
+export function artifactUploads(report) {
+  return detailFiles(report).controls.map((c) => {
+    const id = eventIdFor(report, c.control);
+    return {
+      control: c.control,
+      body: {
+        key: id,
+        kind: 'report',
+        name: `${safe(c.control)}.md`,
+        contentType: 'text/markdown',
+        content: c.content,
+        sha256: sha256(c.content),
+        correlationId: report.executionId,
+        eventId: id,
+        attributes: { standardKey: report.standardKey, control: c.control, repository: report.repository },
+      },
+    };
+  });
+}
+
+// The detail an event carries once AI Hub has stored an upload and answered with its id.
+export function artifactDetail(body, artifactId) {
+  return {
+    status: 'stored',
+    provider: 'aihub',
+    artifactId,
+    byteSize: Buffer.byteLength(body.content, 'utf8'),
+    sha256: body.sha256,
   };
 }
 

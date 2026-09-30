@@ -6,7 +6,7 @@
       "ISO Audit Agent"
     ],
     "dimensions": {
-      "schema": "compliance.v1",
+      "schema": "compliance.v2",
       "standard": "ISO 9001:2015",
       "standardKey": "iso-9001-2015",
       "control": "8.1",
@@ -15,6 +15,7 @@
       "repository": "xianix-team/the-agent",
       "commit": "1d45f72",
       "baselineRef": "main",
+      "runEvents": 1,
       "executionId": "local-2026-09-21-the-agent",
       "pluginVersion": "operation@0.1.0 (local run)",
       "overall": "Partial",

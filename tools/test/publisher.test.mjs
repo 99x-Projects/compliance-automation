@@ -79,14 +79,44 @@ function fakeGit({ branchExists = false, fail = {} } = {}) {
   return state;
 }
 
-function harness({ report, env = {}, responses = [], argv = [], git = fakeGit() }) {
-  const files = new Map();
+// An in-memory AI Hub artifact store with the rules of the real one: the server hashes what it
+// stores, the same key with the same content returns the first artifact, and the same key with
+// different content is refused. fail: a list of statuses answered first, one per request.
+function fakeHub({ fail = [], tamper = false } = {}) {
+  const state = { artifacts: new Map(), requests: [], n: 0 };
+  const failures = [...fail];
+  const reply = (status, body = {}) => ({ status, body: JSON.stringify(body) });
+  state.handle = (url, init) => {
+    const body = JSON.parse(init.body);
+    state.requests.push({ url, key: init.headers?.['X-Api-Key'], body });
+    const failure = failures.shift();
+    if (failure === 'network') return { throws: 'ECONNRESET' };
+    if (failure) return reply(failure, { error: `fake hub: ${failure}` });
+    if (Buffer.byteLength(body.content) > 512 * 1024) return reply(400, { error: 'content must be at most 512 KB.' });
+    const hash = tamper ? 'f'.repeat(64) : sha256(body.content);
+    const existing = state.artifacts.get(body.key);
+    if (existing) {
+      return existing.sha256 === hash
+        ? reply(200, { artifactId: existing.artifactId, sha256: hash, byteSize: existing.byteSize, created: false })
+        : reply(409, { error: 'An artifact with this key already exists with different content.' });
+    }
+    const artifact = { artifactId: `art_${String(state.n += 1).padStart(10, '0')}`, sha256: hash, byteSize: Buffer.byteLength(body.content), content: body.content };
+    state.artifacts.set(body.key, artifact);
+    return reply(201, { artifactId: artifact.artifactId, sha256: hash, byteSize: artifact.byteSize, created: true });
+  };
+  return state;
+}
+
+function harness({ report, env = {}, responses = [], argv = [], git = fakeGit(), hub = fakeHub(), files: seed = {} }) {
+  const files = new Map(Object.entries(seed));
   if (report) files.set('compliance-report.json', JSON.stringify(report));
   const calls = [];
   const logs = [];
   const queue = [...responses];
   const fetchImpl = async (url, init = {}) => {
-    const routed = /\/git\//.test(url) ? git.handle(url, init) : null;
+    // `calls` keeps what it always held — the events POST and GitHub issue comments — so the
+    // delivery tests below read the same whichever store the detailed report went to.
+    const routed = /\/git\//.test(url) ? git.handle(url, init) : /\/artifacts$/.test(url) ? hub.handle(url, init) : null;
     if (!routed) calls.push({ url, init });
     const next = routed ?? queue.shift() ?? { status: 201, body: '{}' };
     if (next.throws) throw new Error(next.throws);
@@ -111,7 +141,7 @@ function harness({ report, env = {}, responses = [], argv = [], git = fakeGit() 
     pluginVersion: 'operation@0.1.0',
     catalogs: ALL_CATALOGS,
   };
-  return { go: () => run({ argv, env, deps }), files, calls, logs, git };
+  return { go: () => run({ argv, env, deps }), files, calls, logs, git, hub };
 }
 
 // Storing the detail in a repository is opt-in: these tests ask for it explicitly,
@@ -371,20 +401,21 @@ test('without a fallback issue a failed commit is recorded as failed', async () 
 
 test('a token alone is not consent to write to the audited repository', async () => {
   // The audited repository is usually the customer's. With no COMPLIANCE_DETAIL_STORE set,
-  // a run that happens to carry a GITHUB_TOKEN must still not commit anything there.
+  // a run that happens to carry a GITHUB_TOKEN must still not commit anything there:
+  // the detailed report goes to AI Hub, beside the summary.
   const env = { ...PUBLISH_ENV, GITHUB_TOKEN: 'ghp_x0123456789abcdefghijklmnop' };
   const h = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env });
   assert.equal(await h.go(), 0);
   const [ev] = events(h);
-  assert.equal(ev.detail.status, 'disabled');
-  assert.match(ev.detail.reason, /is off/);
+  assert.equal(ev.detail.provider, 'aihub');
   assert.equal(h.git.requests.length, 0, 'nothing is written to any repository');
+  assert.ok(h.hub.requests.every((r) => r.key === 'ah_tm_testkey1234567890'), 'the GitHub token goes nowhere');
   assert.equal(h.calls.length, 1, 'the summary still reaches AI Hub');
 });
 
-test('the default, no GitHub token, store off, dry run and publishing off each say why there is no detail', async () => {
+test('no GitHub token, store off, dry run and publishing off each say why there is no detail', async () => {
   const cases = [
-    [{ env: PUBLISH_ENV }, 'disabled', /is off/],
+    [{ env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'off' } }, 'disabled', /is off/],
     [{ env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'github' } }, 'failed', /no GitHub token/],
     [{ env: { ...WITH_GITHUB, COMPLIANCE_DETAIL_STORE: 'off' } }, 'disabled', /is off/],
     [{ env: WITH_GITHUB, argv: ['--dry-run'] }, 'disabled', /dry run/],
@@ -396,7 +427,10 @@ test('the default, no GitHub token, store off, dry run and publishing off each s
     const [ev] = events(h);
     assert.equal(ev.detail.status, status);
     assert.match(ev.detail.reason, reason);
-    if (status === 'disabled') assert.equal(h.git.requests.length, 0);
+    if (status === 'disabled') {
+      assert.equal(h.git.requests.length, 0);
+      assert.equal(h.hub.requests.length, 0);
+    }
   }
 });
 
@@ -412,6 +446,7 @@ test('--check: publishing off is fine; bad config exits 3; an unreachable Hub on
   assert.equal(await harness({ argv: ['--check'] }).go(), 0);
   assert.equal(await harness({ argv: ['--check'], env: { AIHUB_PUBLISH: '1', AIHUB_URL: 'http://evil.test' } }).go(), 3);
   assert.equal(await harness({ argv: ['--check'], env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_BRANCH: '../main' } }).go(), 3);
+  assert.equal(await harness({ argv: ['--check'], env: { ...PUBLISH_ENV, COMPLIANCE_DETAIL_STORE: 'sharepoint' } }).go(), 3);
   // The token warning belongs to the opt-in github store; the default store warns about nothing.
   const noToken = harness({
     argv: ['--check'],
@@ -433,4 +468,169 @@ test('repository names are normalised from any remote form', () => {
   assert.equal(normaliseRepository('git@github.com:xianix-team/the-agent.git'), 'xianix-team/the-agent');
   assert.equal(normaliseRepository('https://dev.azure.com/Org/Proj/_git/Repo'), 'org/repo');
   assert.equal(normaliseRepository('https://user@dev.azure.com/Org/Proj/_git/Repo'), 'org/repo');
+});
+
+// ── The default detail store: AI Hub artifacts ──────────────────────────────────────────────
+
+test('by default each control\'s report is uploaded to AI Hub, and the summary links to it by id and hash (F18)', async () => {
+  const h = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV });
+  assert.equal(await h.go(), 0);
+
+  assert.equal(h.hub.requests.length, 1);
+  const [upload] = h.hub.requests;
+  assert.equal(upload.url, 'https://ai-hub-api.example.test/metrics/nodes/nd_9lcgvLaCAP/node-activities/na_NfPIrObtec/artifacts');
+  assert.equal(upload.key, 'ah_tm_testkey1234567890');
+  assert.ok(!upload.url.includes('whs_'), 'never the secret-in-URL route');
+
+  const [ev] = events(h);
+  assert.deepEqual(
+    { ...upload.body, content: undefined, sha256: undefined },
+    {
+      key: ev.eventId,
+      kind: 'report',
+      name: '8.1.md',
+      contentType: 'text/markdown',
+      content: undefined,
+      sha256: undefined,
+      correlationId: 'exec-test-1',
+      eventId: ev.eventId,
+      attributes: { standardKey: 'iso-9001-2015', control: '8.1', repository: '99x-internal/ai-hub' },
+    },
+  );
+  assert.match(upload.body.content, /8\.1/);
+
+  const stored = h.hub.artifacts.get(ev.eventId);
+  assert.deepEqual(ev.detail, {
+    status: 'stored',
+    provider: 'aihub',
+    artifactId: stored.artifactId,
+    byteSize: stored.byteSize,
+    sha256: sha256(stored.content),
+  });
+  assert.equal(h.git.requests.length, 0, 'nothing is written to any repository');
+  assert.equal(h.calls.length, 1, 'then the summary goes to AI Hub');
+  assert.equal(JSON.parse(h.calls[0].init.body)[0].detail.artifactId, stored.artifactId);
+  assert.match(h.logs.join('\n'), /detailed report stored in AI Hub \(1 artifact\)/);
+});
+
+test('a multi-control run uploads one artifact per control and tells AI Hub how many events to expect', async () => {
+  const h = harness({ report: sample('iso-27001-2022--multi--synthetic.json'), env: PUBLISH_ENV });
+  assert.equal(await h.go(), 0);
+  const out = events(h);
+  assert.deepEqual(h.hub.requests.map((r) => r.body.name), ['A.5.15.md', 'A.8.13.md']);
+  assert.deepEqual(out.map((e) => e.dimensions.runEvents), [2, 2]);
+  assert.notEqual(out[0].detail.artifactId, out[1].detail.artifactId);
+  out.forEach((e, i) => assert.equal(e.detail.sha256, sha256(h.hub.requests[i].body.content), 'each event vouches for its own control\'s report'));
+  assert.match(h.logs.join('\n'), /stored in AI Hub \(2 artifacts\)/);
+});
+
+test('publishing the same execution twice stores nothing twice', async () => {
+  const hub = fakeHub();
+  const first = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub });
+  const again = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub });
+  assert.equal(await first.go(), 0);
+  assert.equal(await again.go(), 0);
+  assert.equal(hub.artifacts.size, 1);
+  assert.deepEqual(events(again)[0].detail, events(first)[0].detail);
+});
+
+test('a 5xx or a dropped connection during upload is retried', async () => {
+  const hub = fakeHub({ fail: [503, 'network'] });
+  const h = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub });
+  assert.equal(await h.go(), 0);
+  assert.equal(hub.requests.length, 3);
+  assert.equal(events(h)[0].detail.status, 'stored');
+});
+
+test('a failed upload is a warning: the event says why, and the summary still reaches AI Hub', async () => {
+  const hub = fakeHub({ fail: [400] });
+  const h = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub });
+  assert.equal(await h.go(), 0);
+  assert.equal(hub.requests.length, 1, 'a 4xx is not retried');
+  assert.deepEqual(events(h)[0].detail, { status: 'failed', reason: 'AI Hub returned 400: fake hub: 400' });
+  assert.equal(h.calls.length, 1);
+  assert.match(h.logs.join('\n'), /⚠ detailed report not stored for 8\.1/);
+});
+
+test('an AI Hub without the artifact store is asked once, not once per control', async () => {
+  const hub = fakeHub({ fail: [401, 401, 401] });
+  const h = harness({ report: sample('iso-27001-2022--multi--synthetic.json'), env: PUBLISH_ENV, hub });
+  assert.equal(await h.go(), 0);
+  assert.equal(hub.requests.length, 1);
+  const out = events(h);
+  assert.ok(out.every((e) => e.detail.status === 'failed' && /no artifact store yet/.test(e.detail.reason)));
+  assert.equal(h.calls.length, 1, 'the summary is still delivered');
+  assert.match(h.logs.join('\n'), /not stored for 2 controls/);
+});
+
+test('changed content under an execution id that was already published is refused, not overwritten', async () => {
+  const hub = fakeHub();
+  assert.equal(await harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub }).go(), 0);
+  const changed = sample('iso-9001-2015--8.1--ai-hub.json');
+  changed.controls[0].reportMd += '\nAn afterthought.\n';
+  const h = harness({ report: changed, env: PUBLISH_ENV, hub });
+  assert.equal(await h.go(), 0);
+  assert.equal(events(h)[0].detail.status, 'failed');
+  assert.match(events(h)[0].detail.reason, /write-once/);
+  assert.ok(![...hub.artifacts.values()].some((a) => a.content.includes('An afterthought')));
+});
+
+test('an event never vouches for a hash AI Hub did not confirm', async () => {
+  const h = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub: fakeHub({ tamper: true }) });
+  assert.equal(await h.go(), 0);
+  assert.equal(events(h)[0].detail.status, 'failed');
+  assert.match(events(h)[0].detail.reason, /SHA-256 mismatch/);
+
+  // Nor for an upload AI Hub answered without an id (an older Hub, or a proxy's empty 200).
+  const hub = { requests: [], handle: () => ({ status: 200, body: '{}' }) };
+  const blank = harness({ report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, hub });
+  assert.equal(await blank.go(), 0);
+  assert.match(events(blank)[0].detail.reason, /returned no artifact id/);
+});
+
+test('a report too large for one artifact is refused by AI Hub and recorded, not truncated', async () => {
+  // 204800 characters is the contract's limit; as three-byte characters that is 600 KB.
+  const report = sample('iso-9001-2015--8.1--ai-hub.json');
+  report.controls[0].reportMd = '規'.repeat(MAX_REPORT_MD);
+  const h = harness({ report, env: PUBLISH_ENV });
+  assert.equal(await h.go(), 0);
+  assert.deepEqual(events(h)[0].detail, { status: 'failed', reason: 'AI Hub returned 400: content must be at most 512 KB.' });
+  assert.equal(h.calls.length, 1, 'the summary is still delivered');
+});
+
+test('secrets never reach AI Hub in an uploaded report either (F4)', async () => {
+  const report = sample('iso-9001-2015--8.1--ai-hub.json');
+  report.controls[0].reportMd += '\nToken in a script: ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123\nConnection: Server=db;Password=Sup3rS3cret!\n';
+  const h = harness({ report, env: { ...PUBLISH_ENV, DB_CONNECTION: 'Server=db;Password=Sup3rS3cret!' } });
+  assert.equal(await h.go(), 0);
+  const uploaded = h.hub.requests.map((r) => JSON.stringify(r.body)).join('\n');
+  for (const secret of ['ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123', 'Sup3rS3cret!', 'ah_tm_testkey1234567890']) {
+    assert.ok(!uploaded.includes(secret), `an uploaded artifact contains ${secret}`);
+    assert.ok(!h.logs.join('\n').includes(secret), `logs contain ${secret}`);
+  }
+  assert.match(h.hub.requests[0].body.content, /\[REDACTED\]/);
+});
+
+test('an invalid report, a dry run and publishing off upload nothing', async () => {
+  const invalid = sample('iso-9001-2015--8.1--ai-hub.json');
+  invalid.controls[0].control = '8.9';
+  const cases = [
+    { report: invalid, env: PUBLISH_ENV },
+    { report: sample('iso-9001-2015--8.1--ai-hub.json'), env: PUBLISH_ENV, argv: ['--dry-run'] },
+    { report: sample('iso-9001-2015--8.1--ai-hub.json'), env: {} },
+  ];
+  for (const opts of cases) {
+    const h = harness(opts);
+    await h.go();
+    assert.equal(h.hub.requests.length, 0);
+  }
+});
+
+test('events saved by an earlier plugin version (compliance.v1) can still be re-sent', async () => {
+  const legacy = loadSamples('events').find((s) => s.file === 'legacy-v1--iso-9001-2015--8.1--the-agent.json').data;
+  assert.equal(legacy[0].dimensions.schema, 'compliance.v1');
+  const h = harness({ env: PUBLISH_ENV, argv: ['--from-file', 'saved.json'], files: { 'saved.json': JSON.stringify(legacy) } });
+  assert.equal(await h.go(), 0);
+  assert.deepEqual(JSON.parse(h.calls[0].init.body), legacy);
+  assert.equal(h.hub.requests.length, 0, 're-sending events uploads nothing');
 });

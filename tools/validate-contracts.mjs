@@ -11,10 +11,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { ROOT, createValidators, loadCatalogs, loadSamples, schemaFilesOnDisk, validateCatalog, validateReport, validateEvents } from './lib/contracts.mjs';
 import { SCHEMAS, CATALOGS } from './lib/contract-data.mjs';
 import { flatten } from './lib/flatten.mjs';
-import { DEFAULT_DETAIL_BRANCH, storedDetails } from './lib/detail-files.mjs';
+import { artifactDetail, artifactUploads } from './lib/detail-files.mjs';
 
-// Golden events show a detailed report committed at this (made-up) commit.
-const SAMPLE_DETAIL_COMMIT = '3f5c2a9e1b7d4c6f8a0e2b4d6f8a1c3e5b7d9f02';
+// Golden events show the detailed report stored in AI Hub. The artifact ids are made up — AI Hub
+// issues random ones — but derived from the content, so the samples are reproducible.
+const sampleDetails = (report) => Object.fromEntries(
+  artifactUploads(report).map(({ control, body }) => [control, artifactDetail(body, `art_${body.sha256.slice(0, 10)}`)]),
+);
 
 const updateGolden = process.argv.includes('--update-golden');
 const validators = createValidators();
@@ -48,8 +51,7 @@ const eventsDir = join(ROOT, 'samples', 'events');
 for (const { file, data } of loadSamples('reports')) {
   record(`report ${file}`, validateReport(validators, data, catalogData));
 
-  const details = storedDetails(data, { repository: data.repository, branch: DEFAULT_DETAIL_BRANCH, commit: SAMPLE_DETAIL_COMMIT });
-  const expected = flatten(data, { details });
+  const expected = flatten(data, { details: sampleDetails(data) });
   const goldenPath = join(eventsDir, file);
   if (updateGolden) {
     writeFileSync(goldenPath, `${JSON.stringify(expected, null, 2)}\n`);

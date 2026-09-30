@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { flatten, MAX_EVENT_BYTES } from '../lib/flatten.mjs';
-import { detailFiles, sha256, storedDetails } from '../lib/detail-files.mjs';
+import { artifactDetail, artifactUploads, detailFiles, sha256, storedDetails } from '../lib/detail-files.mjs';
 import { createValidators, loadCatalogs, loadSamples, validateEvents, validateReport } from '../lib/contracts.mjs';
 
 const validators = createValidators();
@@ -97,4 +97,53 @@ test('a stored detail links each control to its own file by commit permalink and
   });
   assert.match(files.folder, /^audits\/iso-27001-2022\/20260920T093000Z--exec-sample-27001$/);
   assert.deepEqual(validateEvents(validators, events, catalogs), []);
+});
+
+test('every event of a run declares the same total, so AI Hub knows when the run is complete', () => {
+  const events = flatten(report('iso-27001-2022--multi--synthetic.json'));
+  assert.deepEqual(events.map((e) => e.dimensions.runEvents), [2, 2]);
+  assert.equal(flatten(report('iso-9001-2015--8.1--ai-hub.json'))[0].dimensions.runEvents, 1);
+  assert.deepEqual(validateEvents(validators, events, catalogs), []);
+
+  // One part of a split fallback comment is re-sendable on its own: fewer events than declared is fine.
+  assert.deepEqual(validateEvents(validators, [events[0]], catalogs), []);
+
+  // More than declared, or two different totals, would complete the run early or never.
+  const tooMany = structuredClone(events);
+  tooMany.forEach((e) => { e.dimensions.runEvents = 1; });
+  assert.match(validateEvents(validators, tooMany, catalogs).join('\n'), /runEvents=1 but 2 events are being sent/);
+  const disagree = structuredClone(events);
+  disagree[1].dimensions.runEvents = 3;
+  assert.match(validateEvents(validators, disagree, catalogs).join('\n'), /runEvents differs between events \(2, 3\)/);
+});
+
+test('a detail stored in AI Hub names one artifact and the hash of that control\'s report (F18)', () => {
+  const r = report('iso-27001-2022--multi--synthetic.json');
+  const uploads = artifactUploads(r);
+  const details = Object.fromEntries(uploads.map(({ control, body }, i) => [control, artifactDetail(body, `art_sample000${i}`)]));
+  const events = flatten(r, { details });
+  events.forEach((ev, i) => {
+    assert.equal(uploads[i].body.key, ev.eventId, 'the upload key is the event id, so a retry finds its first attempt');
+    assert.equal(uploads[i].body.correlationId, ev.correlationId);
+    assert.equal(ev.detail.sha256, sha256(uploads[i].body.content));
+    assert.equal(ev.detail.byteSize, Buffer.byteLength(uploads[i].body.content));
+  });
+  assert.deepEqual(validateEvents(validators, events, catalogs), []);
+
+  const mixed = structuredClone(events);
+  mixed[0].detail.commit = 'a'.repeat(40);
+  assert.match(validateEvents(validators, mixed, catalogs).join('\n'), /\/0\/detail\/commit boolean schema is false/);
+  const anonymous = structuredClone(events);
+  delete anonymous[0].detail.provider;
+  assert.match(validateEvents(validators, anonymous, catalogs).join('\n'), /must have required property 'provider'/);
+});
+
+test('a report at the contract\'s size limit fits in one AI Hub artifact when it is Latin-script text', () => {
+  // reportMd is capped at 204800 characters; AI Hub takes 512 KB of UTF-8 per artifact. At two
+  // bytes a character that fits. Text that is almost all three-byte characters would not, and the
+  // publisher test covers what happens then.
+  const r = report('iso-9001-2015--8.1--the-agent.json');
+  r.controls[0].reportMd = 'é'.repeat(204800);
+  const [{ body }] = artifactUploads(r);
+  assert.ok(Buffer.byteLength(body.content) <= 512 * 1024, `${Buffer.byteLength(body.content)} bytes`);
 });

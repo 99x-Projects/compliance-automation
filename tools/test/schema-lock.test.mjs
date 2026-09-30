@@ -47,14 +47,14 @@ test('re-running the lock never accepts a changed released schema', () => {
 test('a new schema must be locked, and deleting a released one fails', () => {
   const dir = copyOfSchemas();
   try {
-    const v2 = {
+    const next = {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
-      $id: 'https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v2.schema.json',
+      $id: 'https://github.com/99x-Projects/compliance-automation/contracts/schemas/compliance-event.v3.schema.json',
       type: 'array',
     };
-    writeFileSync(join(dir, 'compliance-event.v2.schema.json'), JSON.stringify(v2));
-    assert.match(checkLock(dir).join('\n'), /v2\.schema\.json: new schema is not locked/);
-    assert.deepEqual(lockNewSchemas(dir), ['compliance-event.v2.schema.json']);
+    writeFileSync(join(dir, 'compliance-event.v3.schema.json'), JSON.stringify(next));
+    assert.match(checkLock(dir).join('\n'), /v3\.schema\.json: new schema is not locked/);
+    assert.deepEqual(lockNewSchemas(dir), ['compliance-event.v3.schema.json']);
     assert.deepEqual(checkLock(dir), []);
 
     rmSync(join(dir, 'control-catalog.v1.schema.json'));

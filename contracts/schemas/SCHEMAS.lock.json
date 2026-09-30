@@ -8,6 +8,10 @@
       "sha256": "21c7a895f74c7a5de4b99d26d57b2db810c475ccca6aec227170a8ad3c4f4b83",
       "lockedAt": "2026-09-22T10:06:23.117Z"
     },
+    "compliance-event.v2.schema.json": {
+      "sha256": "15b666f290fc334b7d71c876f1241f943654589cd92b0ee3bc6118c6dfa55e0a",
+      "lockedAt": "2026-09-30T07:27:03.948Z"
+    },
     "compliance-report.v1.schema.json": {
       "sha256": "5408e090ee822a80f0ed94502b3ab9f6e21fd75e7a6bd37581c8c289463089be",
       "lockedAt": "2026-09-21T13:03:51.321Z"
