@@ -8,7 +8,7 @@ description: >-
   change control, and outsourced-process handoff. Use when the user asks for
   ISO 9001 8.1, operational planning and control, Clause 8 Operation, QMS
   process planning, or /operation 8.1.
-argument-hint: [--sources <path>] [--scope <path>]
+argument-hint: "[--sources <path>] [--scope <path>]"
 ---
 
 Assess **ISO 9001:2015 8.1 Operational planning and control** and write a planning-and-control report. This skill covers **8.1 only**. Do not assess 8.2–8.7 here; inventory outsourced work and point it at future 8.4.
@@ -20,7 +20,7 @@ Parse `$ARGUMENTS` for `--sources <path>` and `--scope <path>`. Also honor:
 
 **Do not treat `git remote` as the only evidence system.** 8.1 usually needs several sources at once (wiki + task tracker + git). Read `providers/_source-contract.md` first, resolve the source list, then fetch.
 
-On a scheduled run there is no issue or work item. Do not wait for labels. Write the report and stop unless the prompt explicitly asks to publish it.
+On a scheduled run there is no issue or work item. Do not wait for labels. Write the report; publishing to AI Hub follows the command's *Publishing to AI Hub* steps whenever `AIHUB_PUBLISH` (or `AIHUB-PUBLISH`) is `1`, whether or not the prompt mentions it. Never commit, push or open a pull request for the report.
 
 Do not copy ISO standard text into the report. Use the assessment checklist below in your own words.
 
