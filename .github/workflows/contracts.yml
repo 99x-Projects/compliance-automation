@@ -7,16 +7,16 @@ on:
     paths:
       - "contracts/**"
       - "tools/**"
-      - "plugins/operation/scripts/**"
-      - "plugins/operation/.claude-plugin/plugin.json"
+      - "plugins/operation/**"
+      - ".claude-plugin/marketplace.json"
       - ".github/workflows/contracts.yml"
   push:
     branches: [main]
     paths:
       - "contracts/**"
       - "tools/**"
-      - "plugins/operation/scripts/**"
-      - "plugins/operation/.claude-plugin/plugin.json"
+      - "plugins/operation/**"
+      - ".claude-plugin/marketplace.json"
       - ".github/workflows/contracts.yml"
 
 permissions:

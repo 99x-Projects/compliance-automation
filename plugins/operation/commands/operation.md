@@ -1,7 +1,7 @@
 ---
 name: operation
-description: Run ISO 9001:2015 Clause 8 Operation automation. Defaults to control 8.1. Evidence sources are declared per project (Jira, ClickUp, Confluence, git, …), not inferred from git remote. Usage: /operation [8.1] [--sources <path>] [--scope <path>]
-argument-hint: [8.1] [--sources <path>] [--scope <path>]
+description: "Run ISO 9001:2015 Clause 8 Operation automation. Defaults to control 8.1. Evidence sources are declared per project (Jira, ClickUp, Confluence, git, …), not inferred from git remote. Usage: /operation [8.1] [--sources <path>] [--scope <path>]"
+argument-hint: "[8.1] [--sources <path>] [--scope <path>]"
 ---
 
 Run ISO 9001:2015 Clause 8 Operation automation for $ARGUMENTS.

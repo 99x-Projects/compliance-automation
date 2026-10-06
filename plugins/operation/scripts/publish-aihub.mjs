@@ -9601,7 +9601,7 @@ async function resolveDetails(report, config, { fetchImpl, sleep, log }) {
 }
 
 // publisher-entry.mjs
-var pluginVersion = true ? "operation@0.3.0" : "operation@dev";
+var pluginVersion = true ? "operation@0.3.1" : "operation@dev";
 function git(args) {
   try {
     return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || void 0;
