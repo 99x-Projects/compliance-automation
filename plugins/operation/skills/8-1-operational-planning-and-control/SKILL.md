@@ -8,7 +8,7 @@ description: >-
   change control, and outsourced-process handoff. Use when the user asks for
   ISO 9001 8.1, operational planning and control, Clause 8 Operation, QMS
   process planning, or /operation 8.1.
-argument-hint: [--sources <path>] [--scope <path>]
+argument-hint: "[--sources <path>] [--scope <path>]"
 ---
 
 Assess **ISO 9001:2015 8.1 Operational planning and control** and write a planning-and-control report. This skill covers **8.1 only**. Do not assess 8.2–8.7 here; inventory outsourced work and point it at future 8.4.
