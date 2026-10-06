@@ -25,6 +25,8 @@ Sources therefore cannot use webhook `use-inputs`. This file sets:
 
 The skill already resolves that env (see [source contract](../providers/_source-contract.md)). Keep the same path in `execute-prompt` as `--sources` so a local replay matches the cron run.
 
+**Only when the repository has that file.** A path given by `--sources` or `OPERATION_SOURCES_FILE` is a declaration: if the file is missing, the run stops with one error line rather than silently auditing less. For a repository with no sources file, leave out both the env and `--sources` and run `/operation 8.1`: the plugin then searches the default locations and falls back to one implicit `git-repo` source over the whole repository (the report header says `Sources: implicit git-repo`).
+
 Put Jira / ClickUp / Confluence **queries** in the product repo YAML, not in this rule file. Put **tokens** only in `with-envs`.
 
 ---

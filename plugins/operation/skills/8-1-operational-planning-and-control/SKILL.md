@@ -20,7 +20,7 @@ Parse `$ARGUMENTS` for `--sources <path>` and `--scope <path>`. Also honor:
 
 **Do not treat `git remote` as the only evidence system.** 8.1 usually needs several sources at once (wiki + task tracker + git). Read `providers/_source-contract.md` first, resolve the source list, then fetch.
 
-On a scheduled run there is no issue or work item. Do not wait for labels. Write the report and stop unless the prompt explicitly asks to publish it.
+On a scheduled run there is no issue or work item. Do not wait for labels. Write the report; publishing to AI Hub follows the command's *Publishing to AI Hub* steps whenever `AIHUB_PUBLISH` (or `AIHUB-PUBLISH`) is `1`, whether or not the prompt mentions it. Never commit, push or open a pull request for the report.
 
 Do not copy ISO standard text into the report. Use the assessment checklist below in your own words.
 
