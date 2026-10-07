@@ -194,6 +194,7 @@ Then run the publisher as described in the `/operation` command (**Publishing to
 - Missing optional provider secrets → that source `UNAVAILABLE`, continue.
 - If no source file exists, use implicit `git-repo` and say so in the header.
 - `compliance-report.json` must match the Markdown report exactly; never invent `executionId`, `pluginVersion`, commit or repository values.
+- Every obligation scored **Partial** or **Gap** is closed by at least one recommended action. A minor one gets a P3 action; obligation 11 gets one that lists outsourced processes for the 8.4 assessment. Only Conform and N/A obligations may have none. The publisher refuses a report that leaves a gap without an action.
 
 ## Output
 

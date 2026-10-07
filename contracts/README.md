@@ -41,7 +41,7 @@ The two real samples came from local runs of the 8.1 skill on 2026-09-21 (implic
 
 | Id | Guarantees | Where |
 |---|---|---|
-| F1 | Catalogues, reports and events satisfy the schemas and the semantic rules; golden events equal `flatten(report)`; every invalid sample is rejected for its expected reason | `npm run validate` |
+| F1 | Catalogues, reports and events satisfy the schemas and the semantic rules; golden events equal `flatten(report)`; every invalid sample is rejected for its expected reason. Among the report rules: every Partial or Gap obligation is closed by at least one action (reports only; events from earlier plugin versions are still accepted) | `npm run validate` |
 | F2 | Released schemas are immutable: a change must ship as `…v2.schema.json`. On pull requests, lock entries from the base branch can't be edited or removed | `npm run schemas:check` |
 | F3 | One event per control, shared `correlationId`, `runAt` present, usage on one event only; provenance comes from the environment and git, never from the skill | `npm test` |
 | F4 | No secret leaves the run: secret-looking env values and known token formats are redacted from the events, the stored detailed report (uploaded or committed), the fallback comments and the logs | `npm test` |

@@ -71,6 +71,10 @@
     "type": "report",
     "error": "cites source 'jira'"
   },
+  "report--gap-without-action.json": {
+    "type": "report",
+    "error": "obligation 11 is Partial but no action closes it"
+  },
   "report--group-mismatch.json": {
     "type": "report",
     "error": "does not match catalogue parent"

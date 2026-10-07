@@ -193,6 +193,14 @@
           6
         ],
         "artifact": ".xianix/operation-sources.yaml"
+      },
+      {
+        "priority": "P3",
+        "text": "List each outsourced process with its provider and current control, ready for the 8.4 assessment.",
+        "closes": [
+          11
+        ],
+        "artifact": "docs/process/outsourced-processes.md"
       }
     ],
     "sources": [
@@ -216,9 +224,9 @@
     "detail": {
       "status": "stored",
       "provider": "aihub",
-      "artifactId": "art_ca72b2696a",
-      "byteSize": 19908,
-      "sha256": "ca72b2696a892cb03a6c767b71cd85c6e116015336ae4f39a4ab4dcb6b8ded10"
+      "artifactId": "art_e973c64bfe",
+      "byteSize": 20061,
+      "sha256": "e973c64bfe01f2ce0dd44421f3ce2f754ceb0c69ea2545215db06a5becef4669"
     }
   }
 ]

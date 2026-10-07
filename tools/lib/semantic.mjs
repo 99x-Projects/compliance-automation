@@ -57,6 +57,16 @@ function checkObligationsAndActions(obligations, actions, sources, where) {
   return errors;
 }
 
+// A report, not an event: every obligation the audit did not find met (Partial or Gap) is closed by
+// at least one action, so a reader is never left with a gap and nothing to do about it. Events are
+// not checked, so AI Hub still accepts what earlier plugin versions sent.
+function checkEveryGapHasAnAction(obligations, actions, where) {
+  const closed = new Set(actions.flatMap((a) => a.closes.map(Number)));
+  return obligations
+    .filter((o) => (o.verdict === 'Partial' || o.verdict === 'Gap') && !closed.has(o.n))
+    .map((o) => `${where}: obligation ${o.n} is ${o.verdict} but no action closes it; add one (P3 if it is minor)`);
+}
+
 export function checkReport(report, catalogs) {
   const index = catalogIndex(catalogs);
   const errors = [];
@@ -67,6 +77,7 @@ export function checkReport(report, catalogs) {
     seen.add(c.control);
     errors.push(...checkControlAgainstCatalog(index, report.standardKey, c.control, c.controlTitle, c.controlGroup, where));
     errors.push(...checkObligationsAndActions(c.obligations, c.actions, report.sources, where));
+    errors.push(...checkEveryGapHasAnAction(c.obligations, c.actions, where));
   });
   if (report.scope.sourcesMode === 'implicit-git-repo') {
     if (report.sources.length !== 1 || report.sources[0].provider !== 'git-repo') {

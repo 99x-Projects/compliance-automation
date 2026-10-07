@@ -8779,6 +8779,10 @@ function checkObligationsAndActions(obligations, actions, sources, where) {
   }
   return errors;
 }
+function checkEveryGapHasAnAction(obligations, actions, where) {
+  const closed = new Set(actions.flatMap((a) => a.closes.map(Number)));
+  return obligations.filter((o) => (o.verdict === "Partial" || o.verdict === "Gap") && !closed.has(o.n)).map((o) => `${where}: obligation ${o.n} is ${o.verdict} but no action closes it; add one (P3 if it is minor)`);
+}
 function checkReport(report, catalogs) {
   const index = catalogIndex(catalogs);
   const errors = [];
@@ -8789,6 +8793,7 @@ function checkReport(report, catalogs) {
     seen.add(c.control);
     errors.push(...checkControlAgainstCatalog(index, report.standardKey, c.control, c.controlTitle, c.controlGroup, where));
     errors.push(...checkObligationsAndActions(c.obligations, c.actions, report.sources, where));
+    errors.push(...checkEveryGapHasAnAction(c.obligations, c.actions, where));
   });
   if (report.scope.sourcesMode === "implicit-git-repo") {
     if (report.sources.length !== 1 || report.sources[0].provider !== "git-repo") {
@@ -9601,7 +9606,7 @@ async function resolveDetails(report, config, { fetchImpl, sleep, log }) {
 }
 
 // publisher-entry.mjs
-var pluginVersion = true ? "operation@0.3.1" : "operation@dev";
+var pluginVersion = true ? "operation@0.3.2" : "operation@dev";
 function git(args) {
   try {
     return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || void 0;

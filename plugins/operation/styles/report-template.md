@@ -144,7 +144,7 @@ Score each row from evidence in this run. Core obligations 1–7 drive overall s
 
 ### Recommended actions
 
-Ordered by 8.1 impact. Each action must close a named gap in the obligation table.
+Ordered by 8.1 impact. Each action must close a named gap in the obligation table, and every obligation scored Partial or Gap must be closed by at least one action (P3 for a minor one). Only Conform and N/A obligations may have none.
 
 | Priority | Action | Closes obligation # | Suggested artifact |
 |---|---|---|---|
