@@ -29,7 +29,7 @@ Machine-readable contracts between compliance skills (this repository) and 99x A
 
 | Sample | Why it's here |
 |---|---|
-| `samples/reports/iso-9001-2015--8.1--hub-service.json` | Real 8.1 run on `example-org/hub-service` — overall **Gap** |
+| `samples/reports/iso-9001-2015--8.1--hub-service.json` | A real 8.1 run, anonymised: the product is renamed to `example-org/hub-service` and its paths, features, history and providers are made generic. Overall **Gap** |
 | `samples/reports/iso-9001-2015--8.1--the-agent.json` | Real 8.1 run on `xianix-team/the-agent` — overall **Partial** |
 | `samples/reports/iso-27001-2022--multi--synthetic.json` | Synthetic: a second standard, two controls in one execution, an unavailable source, `originalVerdict`, and usage placeholders |
 | `samples/events/*.json` | Golden events — generated from the reports by the reference flattener and checked for drift. `legacy-v1--*.json` is a released v1 event, kept to prove old events still validate |

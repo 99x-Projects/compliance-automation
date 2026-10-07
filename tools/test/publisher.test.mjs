@@ -133,7 +133,7 @@ function harness({ report, env = {}, responses = [], argv = [], git = fakeGit(),
       return files.get(p);
     },
     writeText: async (p, t) => files.set(p, t),
-    gitInfo: async () => ({ remote: 'https://github.com/Example-Org/Hub-Service.git', commit: 'abc1234', ref: 'development' }),
+    gitInfo: async () => ({ remote: 'https://github.com/example-org/Hub-Service.git', commit: 'abc1234', ref: 'development' }),
     fetchImpl,
     sleep: async () => {},
     now: () => new Date('2026-09-21T12:00:00Z'),
