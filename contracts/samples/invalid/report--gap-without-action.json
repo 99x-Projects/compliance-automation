@@ -364,14 +364,6 @@
             8
           ],
           "artifact": ".xianix/operation-sources.yaml"
-        },
-        {
-          "priority": "P3",
-          "text": "List each outsourced process with its provider and current control, ready for the 8.4 assessment.",
-          "closes": [
-            11
-          ],
-          "artifact": "docs/process/outsourced-processes.md"
         }
       ],
       "sections": [

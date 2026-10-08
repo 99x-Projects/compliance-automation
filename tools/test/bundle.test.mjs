@@ -189,3 +189,17 @@ test('the bundled publisher rejects an invalid report with exit code 2', async (
     rmSync(dir, { recursive: true });
   }
 });
+
+test('the bundled publisher refuses a report that leaves a gap without an action, and says which', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'publisher-'));
+  try {
+    const report = structuredClone(loadSamples('reports').find((s) => s.file === 'iso-9001-2015--8.1--the-agent.json').data);
+    report.controls[0].actions = report.controls[0].actions.filter((a) => !a.closes.includes(11));
+    writeFileSync(join(dir, 'compliance-report.json'), JSON.stringify(report));
+    const { code, out } = await runBundle([], {}, dir);
+    assert.equal(code, 2, out);
+    assert.match(out, /obligation 11 is Partial but no action closes it/);
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
+});

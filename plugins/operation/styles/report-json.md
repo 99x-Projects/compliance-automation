@@ -36,7 +36,7 @@ If the file already exists **from this execution** (another control ran first), 
 | `overall` | The report's **Overall status** |
 | `summary` | The **Summary** paragraph |
 | `obligations` | One per row of **Obligation scores** — see below |
-| `actions` | One per row of **Recommended actions**: `priority` (`P0`–`P3`), `text`, `closes` (obligation numbers as integers), optional `artifact` |
+| `actions` | One per row of **Recommended actions**: `priority` (`P0`–`P3`), `text`, `closes` (obligation numbers as integers), optional `artifact`. Every obligation with verdict `Partial` or `Gap` must appear in some action's `closes`; the publisher rejects the report otherwise (exit code 2) |
 | `sections` | Every other table in the report, in order: `{ "id": "<kebab-case of the heading>", "title": "<heading>", "kind": "table", "columns": [...], "rows": [[...], ...] }`. Paragraph-only parts (e.g. **Change control**) as `{ "kind": "text", "text": "..." }`. Plain text in cells — no Markdown. |
 | `reportMd` | The complete Markdown report. Don't paste it by hand: write `"@@REPORT_MD@@"`, then embed the file with `jq --rawfile md <report>.md '.controls[-1].reportMd = $md' compliance-report.json > tmp.json && mv tmp.json compliance-report.json` |
 
